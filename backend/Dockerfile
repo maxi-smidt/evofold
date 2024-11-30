@@ -1,14 +1,14 @@
 FROM python:3.13-slim
 LABEL authors="maximiliansmidt"
 
-WORKDIR /code
+WORKDIR /app/backend
 
-COPY ./requirements.txt /code/requirements.txt
+COPY requirements.txt ./
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-COPY ./app /code/app
+COPY . ./
 
 EXPOSE 8080
 
-CMD ["fastapi", "run", "app/main.py", "--port", "8080", "--proxy-headers"]
+CMD ["fastapi", "run", "main.py", "--port", "8080", "--proxy-headers"]
