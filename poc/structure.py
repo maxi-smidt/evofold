@@ -18,7 +18,7 @@ class AtomStructure:
     def get_position(self) -> npt.ArrayLike:
         return np.array([self.x, self.y, self.z])
 
-@dataclass()
+@dataclass
 class AminoAcidStructure:
     sequence_id: int
     one_letter_code: str
@@ -85,7 +85,6 @@ class ProteinStructure:
             self._print_cif_positions(f)
 
     def _print_cif_positions(self, file: TextIO):
-        self._print_cif_header(file)
         atom_header = [
             'loop_', '_atom_site.group_PDB', '_atom_site.id', '_atom_site.type_symbol', '_atom_site.label_atom_id',
             '_atom_site.label_alt_id', '_atom_site.label_comp_id', '_atom_site.label_asym_id',
