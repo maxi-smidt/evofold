@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 
-import residue_constants as rc
+from poc.utils import residue_constants as rc
+
 
 @dataclass
 class Atom:

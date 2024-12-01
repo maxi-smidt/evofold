@@ -1,11 +1,18 @@
+import io
+
 import numpy as np
 import numpy.typing as npt
-import residue_constants as rc
+from openmm import VerletIntegrator
+from openmm.app import ForceField, Simulation, NoCutoff
+from openmm.unit import pico, Quantity
+
+from poc.fixer.pdbfixer import PDBFixer
+from poc.utils import residue_constants as rc
 
 from dataclasses import dataclass, field
 from itertools import count
 from scipy.optimize import minimize
-from typing import List, Literal, Union, TextIO
+from typing import List, Literal, Union
 
 
 @dataclass
@@ -23,6 +30,7 @@ class AminoAcidStructure:
     sequence_id: int
     one_letter_code: str
     previous_aa: Union['AminoAcidStructure', None]
+    next_aa: Union['AminoAcidStructure', None] = None
     three_letter_code: str = field(init=False)
     atoms: List[AtomStructure] = field(init=False)
 
@@ -78,82 +86,88 @@ class ProteinStructure:
             current_aa = AminoAcidStructure(i, aa, previous_aa)
             self.amino_acids.append(current_aa)
             previous_aa = current_aa
+        previous_aa = None
+        for aa in self.amino_acids[::-1]:
+            if previous_aa is not None:
+                aa.next_aa = previous_aa
+            previous_aa = aa
 
-    def to_cif(self, file_name: str):
-        with open(file_name, 'w') as f:
-            self._print_cif_header(f)
-            self._print_cif_positions(f)
 
-    def _print_cif_positions(self, file: TextIO):
+
+    def to_cif(self, file_name: str | None = None) -> str:
+        cif_string = self._cif_header_to_str()
+        cif_string += self._cif_seperator_to_str()
+        cif_string += self._cif_positions_to_str()
+
+        if file_name is not None:
+            with open(file_name, 'w') as f:
+                f.write(cif_string)
+
+        return cif_string
+
+    def _cif_positions_to_str(self) -> str:
         atom_header = [
             'loop_', '_atom_site.group_PDB', '_atom_site.id', '_atom_site.type_symbol', '_atom_site.label_atom_id',
             '_atom_site.label_alt_id', '_atom_site.label_comp_id', '_atom_site.label_asym_id',
             '_atom_site.label_entity_id', '_atom_site.label_seq_id', '_atom_site.pdbx_PDB_ins_code',
             '_atom_site.Cartn_x', '_atom_site.Cartn_y', '_atom_site.Cartn_z', '_atom_site.occupancy',
-            '_atom_site.B_iso_or_equiv', '_atom_site.pdbx_formal_charge', '_atom_site.auth_seq_id',
-            '_atom_site.auth_comp_id', '_atom_site.auth_asym_id', '_atom_site.auth_atom_id',
+            '_atom_site.B_iso_or_equiv', '_atom_site.auth_seq_id', '_atom_site.auth_asym_id',
             '_atom_site.pdbx_PDB_model_num'
         ]
-
-        file.write('\n'.join(atom_header))
-        atom_nr = count(start=0)
-        aa_nr = count(start=0)
+        positions_string = '\n'.join(atom_header)
+        atom_nr = count(start=1)
+        aa_nr = count(start=1)
         for aa in self.amino_acids:
             seq_id = next(aa_nr)
             for atom in aa.atoms:
                 data = [
                     'ATOM',                 # group_PDB (here always ATOM)
-                    f"{next(atom_nr)}",     # id
+                    f'{next(atom_nr)}',     # id
                     atom.atom_id[0],        # type_symbol (e.g. N, O, C)
                     atom.atom_id,           # label_atom_id (e.g. CA, O, H1)
                     '.',                    # label_alt_id (always .)
                     aa.three_letter_code,   # label_comp_id
                     'C',                    # label_asym_id (always C)
                     '3',                    # label_entity_id (always 3)
-                    f"{seq_id}",            # label_seq_id
+                    f'{seq_id}',            # label_seq_id
                     '?',                    # pdbx_PDB_ins_code (always ?)
-                    f"{atom.x:.3f}",        # Cartn_x
-                    f"{atom.y:.3f}",        # Cartn_y
-                    f"{atom.z:.3f}",        # Cartn_z
+                    f'{atom.x:.3f}',        # Cartn_x
+                    f'{atom.y:.3f}',        # Cartn_y
+                    f'{atom.z:.3f}',        # Cartn_z
                     '1.00',                 # occupancy (always 1.00)
                     '0.00',                 # B_iso_or_equiv (always 0.00)
-                    '?',                    # pdbx_formal_charge (always ?)
-                    f"{seq_id}",            # auth_seq_id (like label_seq_id)
-                    aa.three_letter_code,   # auth_comp_id
+                    f'{seq_id}',            # auth_seq_id (like label_seq_id)
                     'A',                    # auth_asym_id (always A)
-                    f"{atom.atom_id}",      # auth_atom_id (like label_atom_id)
                     '1'                     # pdbx_PDB_model_num (1 because we always have only one chain)
                 ]
-                file.write('\n' + '\t'.join(data))
+                positions_string += '\n' + '\t'.join(data)
+        return positions_string
 
-    def _print_cif_header(self, file: TextIO):
-        file.write(f'data_EvoFold_{self.sequence}\n')
+    def _cif_header_to_str(self):
+        return f'data_EvoFold_{self.sequence}\n'
 
     @staticmethod
-    def _print_cif_seperator(file: TextIO):
-        file.write('#\n')
+    def _cif_seperator_to_str():
+        return '#\n'
 
+    def fitness(self) -> Quantity:
+        cif_file = io.StringIO(self.to_cif())
+        cif_file.seek(0)
+        fixer = PDBFixer(cif_file)
 
-x = ProteinStructure("PEPTIDE")
+        fixer.findMissingResidues()
+        fixer.findMissingAtoms()
+        fixer.addMissingAtoms()
+        fixer.addMissingHydrogens()
 
-x.to_cif('test_new.cif')
+        forcefield = ForceField("amber14-all.xml", "amber14/tip3pfb.xml")
 
+        system = forcefield.createSystem(fixer.topology, nonbondedMethod=NoCutoff)
+        integrator = VerletIntegrator(0.001 * pico.factor)
+        simulation = Simulation(fixer.topology, system, integrator)
+        simulation.context.setPositions(fixer.positions)
+        state = simulation.context.getState(getEnergy=True)
+        return state.getPotentialEnergy()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+x = ProteinStructure('PEPTIDE')
+print(x.fitness())

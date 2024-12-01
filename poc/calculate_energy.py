@@ -1,30 +1,30 @@
-from openmm import app, VerletIntegrator
-from openmm import unit
-from openmm.app import PDBFile
-from openmm import Platform
+import io
 
-# Load the protein structure from a PDB file
-pdb = PDBFile('test.cif')
+from openmm import VerletIntegrator
+from openmm.app import ForceField, NoCutoff, Simulation
+from openmm.unit import pico
 
-# Apply a force field (use appropriate force field files)
-forcefield = app.ForceField('amber99sb.xml', 'amber99_obc.xml')
+from poc.fixer.pdbfixer import PDBFixer
 
-# Create the system using the PDB topology and the force field
-system = forcefield.createSystem(pdb.topology, nonbondedMethod=app.NoCutoff)
+with open("test_new.cif", "r") as f:
+    data = f.read()
 
-# Set up the simulation context
-platform = Platform.getPlatformByName('CPU')  # Or 'CUDA' if you want to use a GPU
-integrator = VerletIntegrator(0.001)  # A simple integrator, not needed for just energy calculation
-simulation = app.Simulation(pdb.topology, system, integrator, platform)
+cif_file = io.StringIO(data)
+cif_file.seek(0)
+fixer = PDBFixer(cif_file)
 
-# Set the atom positions (if you've modified them)
-# If you haven't modified the structure, this is not necessary
-positions = pdb.getPositions()
-simulation.context.setPositions(positions)
+fixer.findMissingResidues()
+fixer.findMissingAtoms()
+fixer.addMissingAtoms()
+fixer.addMissingHydrogens()
 
-# Calculate the potential energy of the system
+forcefield = ForceField("amber14-all.xml", "amber14/tip3pfb.xml")
+
+system = forcefield.createSystem(fixer.topology, nonbondedMethod=NoCutoff)
+
+integrator = VerletIntegrator(0.001*pico.factor)
+simulation = Simulation(fixer.topology, system, integrator)
+simulation.context.setPositions(fixer.positions)
 state = simulation.context.getState(getEnergy=True)
-energy = state.getPotentialEnergy()
 
-# Print the energy in kilocalories per mole (kcal/mol)
-print(f"Potential Energy: {energy.value_in_unit(unit.kilocalories_per_mole)} kcal/mol")
+print(f"Potential Energy:{state.getPotentialEnergy()}")
