@@ -34,8 +34,8 @@ export class SimulationService {
 
     const sendToWebSocket = (data: any) => {
       let attempts = 0;
-      const maxAttempts = 10;
-      const interval = 10; // milliseconds
+      const maxAttempts = 100;
+      const interval = 50; // milliseconds
 
       const trySend = () => {
         if (this.ws!.readyState === WebSocket.OPEN) {

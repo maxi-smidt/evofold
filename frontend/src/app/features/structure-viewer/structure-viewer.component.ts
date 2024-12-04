@@ -7,6 +7,7 @@ import {SimulationData} from '../../types/SimulationData';
 import {ResultEntries, ResultEntry} from '../../types/ResultEntry';
 import {LocalStorageService} from '../../services/local-storage.service';
 import {v4 as uuidv4} from 'uuid';
+import {environment} from '../../../environments/environment';
 
 @Component({
   selector: 'app-structure-viewer',
@@ -45,7 +46,7 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.subject = this.simulationService.connect('ws://localhost:8000/api/simulate');
+    this.subject = this.simulationService.connect(environment.apiUrl);
     this.subscription = this.subject.subscribe({
       next: (msg: MessageEvent) => this.handleMessage(msg),
       error: (err: any) => console.error('WebSocket error:', err),
