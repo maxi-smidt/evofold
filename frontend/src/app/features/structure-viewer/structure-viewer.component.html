@@ -1,1 +1,45 @@
-<p>structure-viewer works!</p>
+<div class="flex h-full">
+  <div class="flex flex-column bg-gray-200 w-2 p-1 gap-1 overflow-y-scroll">
+    @for (key of Object.keys(results); track key) {
+      <div class="flex border border-1 border-round-lg align-items-center hover:bg-gray-300
+                  justify-content-center p-3 select-none cursor-pointer"
+           (click)="onEntryClick(key)">
+        <div class="text-gray-500">Generation {{ results[key].generation }}</div>
+      </div>
+    }
+  </div>
+
+  <div class="flex w-full flex-column">
+    <div class="flex h-full relative">
+      @if (source) {
+        <ngx-structure-viewer
+          [settings]="settings"
+          [source]="source"/>
+      }
+    </div>
+    <div class="flex h-11rem bg-gray-600">
+      @if (currentResultEntry) {
+        <div class="grid p-4">
+          <div class="col-2">
+            <div class="text-lg text-gray-200">Generation:</div>
+          </div>
+          <div class="col-10">
+            <div class="text-lg text-gray-200">{{ currentResultEntry.generation }}</div>
+          </div>
+          <div class="col-2">
+            <div class="text-lg text-gray-200">Fitness:</div>
+          </div>
+          <div class="col-10">
+            <div class="text-lg text-gray-200">{{ currentResultEntry.fitness }}</div>
+          </div>
+          <div class="col-2">
+            <div class="text-lg text-gray-200">Sequence:</div>
+          </div>
+          <div class="col-10">
+            <div class="text-lg text-gray-200">{{ currentResultEntry.sequence }}</div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
