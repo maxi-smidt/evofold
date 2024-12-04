@@ -6,6 +6,7 @@ import {Observable, Subject} from 'rxjs';
 })
 export class SimulationService {
   private subject: Subject<MessageEvent> | undefined;
+  private ws: WebSocket | undefined;
 
   constructor() {
   }
@@ -20,13 +21,13 @@ export class SimulationService {
   private create(url: string): Subject<MessageEvent> {
     const subject = new Subject<MessageEvent>();
 
-    const ws = new WebSocket(url);
+    this.ws = new WebSocket(url);
 
     const observable = new Observable<MessageEvent>(observer => {
-      ws.onmessage = (event) => observer.next(event);
-      ws.onerror = (error) => observer.error(error);
-      ws.onclose = () => observer.complete();
-      return () => ws.close();
+      this.ws!.onmessage = (event) => observer.next(event);
+      this.ws!.onerror = (error) => observer.error(error);
+      this.ws!.onclose = () => observer.complete();
+      return () => this.ws!.close();
     });
 
     observable.subscribe(subject);
@@ -37,8 +38,8 @@ export class SimulationService {
       const interval = 10; // milliseconds
 
       const trySend = () => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify(data));
+        if (this.ws!.readyState === WebSocket.OPEN) {
+          this.ws!.send(JSON.stringify(data));
         } else if (attempts < maxAttempts) {
           attempts++;
           console.log(`Retrying (${attempts}/${maxAttempts})...`);
@@ -56,5 +57,13 @@ export class SimulationService {
     });
 
     return subject;
+  }
+
+  disconnect(): void {
+    if (this.ws) {
+      this.ws.close();
+      this.ws = undefined;
+      this.subject = undefined;
+    }
   }
 }

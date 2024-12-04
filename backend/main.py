@@ -1,5 +1,4 @@
 import asyncio
-import base64
 import json
 
 from fastapi import FastAPI
@@ -20,8 +19,6 @@ async def simulate(websocket: WebSocket):
     await websocket.accept()
     try:
         sequence = json.loads(await websocket.receive_text())
-        print("entered")
-        print(sequence)
         generation = 0
         while generation < 20:
             structure = Protein(sequence)
@@ -31,8 +28,7 @@ async def simulate(websocket: WebSocket):
                 "cifFile": structure.to_cif(),
             }
             generation += 1
-            print(data)
             await websocket.send_json(data)
-            await asyncio.sleep(20)
+            await asyncio.sleep(5)
     except Exception as e:
         print(f"Connection closed: {e}")

@@ -39,7 +39,7 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     const seq = this.route.snapshot.paramMap.get('sequence');
-
+    this.localStorageService.clearAll();
     if (!seq) {
       this.router.navigate(['/']).then();
       return;
