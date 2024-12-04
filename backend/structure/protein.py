@@ -7,12 +7,12 @@ from openmm import VerletIntegrator
 from openmm.app import Simulation, ForceField, NoCutoff
 from openmm.unit import pico, Quantity
 
-from amino_acid import AminoAcid
-from fixer.pdbfixer import PDBFixer
+from backend.structure.amino_acid import AminoAcid
+from backend.structure.fixer.pdbfixer import PDBFixer
 
 
 @dataclass
-class ProteinStructure:
+class Protein:
     sequence: str
     amino_acids: List[AminoAcid] = field(init=False)
 

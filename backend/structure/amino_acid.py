@@ -1,12 +1,12 @@
 import numpy as np
 import numpy.typing as npt
-import residue_constants as rc
+import backend.structure.residue_constants as rc
 
 from dataclasses import dataclass, field
 from scipy.optimize import minimize
 from typing import Union, List, Literal
 
-from atom import Atom
+from backend.structure.atom import Atom
 
 
 @dataclass
