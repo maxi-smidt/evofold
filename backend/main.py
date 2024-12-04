@@ -26,6 +26,7 @@ async def simulate(websocket: WebSocket):
                 "generation": generation,
                 "fitness": str(structure.fitness()),
                 "cifFile": structure.to_cif(),
+                "sequence": sequence
             }
             generation += 1
             await websocket.send_json(data)
