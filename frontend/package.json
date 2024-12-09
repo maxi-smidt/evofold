@@ -16,7 +16,7 @@
     "@angular/core": "^19.0.0",
     "@angular/forms": "^19.0.0",
     "@angular/platform-browser": "^19.0.0",
-    "@angular/platform-browser-dynamic": "^19.0.0",
+    "@angular/platform-browser-dynamic": "^19.0.3",
     "@angular/router": "^19.0.0",
     "molstar": "^4.9.0",
     "ngx-structure-viewer": "^0.0.23",
