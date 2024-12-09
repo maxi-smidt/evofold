@@ -37,7 +37,7 @@ python-dotenv==1.0.1
 python-multipart==0.0.19
 pytz==2024.2
 PyYAML==6.0.2
-rasterio==1.4.2
+rasterio==1.4.3
 requests==2.32.3
 rich==13.9.4
 rioxarray==0.18.1
