@@ -27,8 +27,16 @@ class AminoAcid:
             if atom_position[0] == 'CA':
                 self.atoms.append(ca)
             else:
-                position = np.array(atom_position[2]) + ca.get_position()
-                self.atoms.append(Atom(atom_position[0], position[0], position[1], position[2]))
+                R_x_180 = np.array([
+                    [ 1,  0,  0],
+                    [ 0, -1,  0],
+                    [ 0,  0, -1]
+                ])
+
+                x = atom_position[2][0] + ca.x
+                y = atom_position[2][1] + ca.y
+                z = atom_position[2][2] + ca.z
+                self.atoms.append(Atom(atom_position[0], x, y, z))
 
     def _calculate_ca_pos(self, d_n) -> Atom:
         atom_id = 'CA'
@@ -45,7 +53,14 @@ class AminoAcid:
         r_n_2 = r_ca_2 + d_n
         constraint1 = np.linalg.norm(r_ca_2 - r_prev_ca) - rc.ca_ca
         constraint2 = np.linalg.norm(r_n_2 - r_prev_c) - rc.n_c
-        return constraint1 ** 2 + constraint2 ** 2
+
+        v1 = r_prev_ca - r_prev_c
+        v2 = r_n_2 - r_prev_c
+        angle_cos = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+        target_angle_cos = np.cos(np.radians(111))  # Target ~111°
+        constraint3 = angle_cos - target_angle_cos
+
+        return constraint1 ** 2 + constraint2 ** 2 + constraint3 ** 2
 
     def get_back_bone(self, element: Literal['CA', 'C', 'N']):
         if element == 'CA':

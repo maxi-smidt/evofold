@@ -29,8 +29,6 @@ class Protein:
                 aa.next_aa = previous_aa
             previous_aa = aa
 
-
-
     def to_cif(self, file_name: str | None = None) -> str:
         cif_string = self._cif_header_to_str()
         cif_string += self._cif_seperator_to_str()
