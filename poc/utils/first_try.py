@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from poc.utils import residue_constants as rc
+from backend.structure import residue_constants as rc
 
 
 @dataclass
