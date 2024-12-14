@@ -3,7 +3,6 @@ import numpy.typing as npt
 import backend.structure.residue_constants as rc
 
 from dataclasses import dataclass, field
-from scipy.optimize import minimize
 from typing import Union, List, Literal
 
 from backend.structure.atom import Atom
@@ -14,6 +13,7 @@ class AminoAcid:
     sequence_id: int
     one_letter_code: str
     previous_aa: Union['AminoAcid', None]
+    is_last: bool
     next_aa: Union['AminoAcid', None] = None
     three_letter_code: str = field(init=False)
     atoms: List[Atom] = field(init=False)
@@ -22,52 +22,66 @@ class AminoAcid:
         self.three_letter_code = rc.restype_1to3[self.one_letter_code]
         self.atoms = []
         atom_positions = rc.rigid_group_atom_positions[self.three_letter_code]
-        ca = self._calculate_ca_pos(np.array(atom_positions[0][2]))
-        for atom_position in atom_positions:
-            if atom_position[0] == 'CA':
-                self.atoms.append(ca)
-            else:
-                R_x_180 = np.array([
-                    [ 1,  0,  0],
-                    [ 0, -1,  0],
-                    [ 0,  0, -1]
-                ])
+        atom_positions = atom_positions[:-1] if not self.is_last else atom_positions  # last on gets termination O
 
-                x = atom_position[2][0] + ca.x
-                y = atom_position[2][1] + ca.y
-                z = atom_position[2][2] + ca.z
+        n = self._calculate_n_pos()
+        for atom_position in atom_positions:
+            if atom_position[0] == 'N':
+                self.atoms.append(n)
+            else:
+                x = atom_position[2][0] + n.x
+                y = atom_position[2][1] + n.y
+                z = atom_position[2][2] + n.z
                 self.atoms.append(Atom(atom_position[0], x, y, z))
 
-    def _calculate_ca_pos(self, d_n) -> Atom:
-        atom_id = 'CA'
+    def _calculate_n_pos(self) -> Atom:
+        atom_id = 'N'
         if self.previous_aa is None:
             return Atom(atom_id, 0.0, 0.0, 0.0)
 
-        initial_guess = self.previous_aa.get_back_bone('CA').get_position() + np.array([rc.ca_ca, 0.0, 0.0])
-        result = minimize(self._objective_start_position, initial_guess, d_n)
-        return Atom(atom_id, result.x[0], result.x[1], result.x[2])
+        prev_n  = self.previous_aa.get_back_bone_position('N')
+        prev_ca = self.previous_aa.get_back_bone_position('CA')
+        prev_c  = self.previous_aa.get_back_bone_position('C')
 
-    def _objective_start_position(self, r_ca_2: npt.ArrayLike, d_n: npt.ArrayLike):
-        r_prev_ca = self.previous_aa.get_back_bone('CA').get_position()
-        r_prev_c = self.previous_aa.get_back_bone('C').get_position()
-        r_n_2 = r_ca_2 + d_n
-        constraint1 = np.linalg.norm(r_ca_2 - r_prev_ca) - rc.ca_ca
-        constraint2 = np.linalg.norm(r_n_2 - r_prev_c) - rc.n_c
+        nc = prev_c - prev_n
+        u_nc = nc / np.linalg.norm(nc)
+        u_cn = u_nc
 
-        v1 = r_prev_ca - r_prev_c
-        v2 = r_n_2 - r_prev_c
-        angle_cos = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
-        target_angle_cos = np.cos(np.radians(111))  # Target ~111°
-        constraint3 = angle_cos - target_angle_cos
+        cca = prev_ca - prev_c
+        u_cca = cca / np.linalg.norm(cca)
 
-        return constraint1 ** 2 + constraint2 ** 2 + constraint3 ** 2
+        u_cn = self.adjust_angle(u_cca, u_cn, 114)
 
-    def get_back_bone(self, element: Literal['CA', 'C', 'N']):
+        cn = prev_c + u_cn * rc.n_c
+
+        return Atom(atom_id, cn[0], cn[1], cn[2])
+
+    @staticmethod
+    def adjust_angle(u_cca, u_cn, alpha):
+        alpha = np.deg2rad(alpha)
+
+        cos_theta = np.dot(u_cca, u_cn)
+        cos_theta = np.clip(cos_theta, -1.0, 1.0)
+        theta = np.arccos(cos_theta)  # current angle
+
+        delta_alpha = alpha - theta  # rotation angle
+
+        r = np.cross(u_cca, u_cn)  # rotation axis
+
+        r_unit = r / np.linalg.norm(r)
+
+        u_cn_rotated = (
+                u_cn * np.cos(delta_alpha) +
+                np.cross(r_unit, u_cn) * np.sin(delta_alpha) +
+                r_unit * np.dot(r_unit, u_cn) * (1 - np.cos(delta_alpha))
+        )
+        return u_cn_rotated
+
+
+    def get_back_bone_position(self, element: Literal['CA', 'C', 'N']) -> npt.ArrayLike:
         if element == 'CA':
-            return self.atoms[1]
+            return self.atoms[1].get_position()
         elif element == 'C':
-            return self.atoms[2]
+            return self.atoms[2].get_position()
         elif element == 'N':
-            return self.atoms[0]
-        else:
-            raise NotImplementedError
+            return self.atoms[0].get_position()
