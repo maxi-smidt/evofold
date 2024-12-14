@@ -42,7 +42,6 @@ export class SimulationService {
           this.ws!.send(JSON.stringify(data));
         } else if (attempts < maxAttempts) {
           attempts++;
-          console.log(`Retrying (${attempts}/${maxAttempts})...`);
           setTimeout(trySend, interval);
         } else {
           console.error("Failed to send data: WebSocket is not open.");
