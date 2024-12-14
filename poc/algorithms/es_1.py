@@ -1,5 +1,5 @@
 import copy
-from datetime import datetime
+import time
 
 import numpy as np
 from heapq import nsmallest
@@ -70,14 +70,16 @@ class EvolutionStrategy1:
 
 def main():
     # EvolutionStrategy1().run("PEPTIDE")
-    p = Protein("PEPTIDE")
+    p = Protein("ARNDCQEGHILKMFPSTWYV")
     print(p.fitness())
     print(p.to_cif())
 
-# current fitness without looking at the angles: 1096647.4496421814 kJ/mol
+# current fitness for ARNDCQEGHILKMFPSTWYV: 9.79537141081154e+19 kJ/mol
+# current fitness for ARNDCQEGHILKMFPSTWYV: 11734092.587478638 kJ/mol
+# current fitness for ARNDCQEGHILKMFPSTWYV: 11562952.821296692 kJ/mol
 
 
 if __name__ == "__main__":
-    start = datetime.now()
+    start_time = time.time()
     main()
-    print(datetime.now() - start)
+    print(f'{(time.time() - start_time) * 1000:.2f}ms')
