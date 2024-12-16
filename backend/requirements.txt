@@ -9,7 +9,7 @@ click-plugins==1.1.1
 cligj==0.7.2
 dnspython==2.7.0
 email_validator==2.2.0
-fastapi==0.115.5
+fastapi==0.115.6
 fastapi-cli==0.0.6
 geopandas==1.0.1
 h11==0.14.0
