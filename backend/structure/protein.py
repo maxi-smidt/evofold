@@ -20,7 +20,7 @@ class Protein:
         previous_aa = None
         self.amino_acids = []
         for i, aa in enumerate(self.sequence):
-            current_aa = AminoAcid(i, aa, previous_aa)
+            current_aa = AminoAcid(i, aa, previous_aa, i == len(self.sequence) - 1)
             self.amino_acids.append(current_aa)
             previous_aa = current_aa
         previous_aa = None
@@ -28,8 +28,6 @@ class Protein:
             if previous_aa is not None:
                 aa.next_aa = previous_aa
             previous_aa = aa
-
-
 
     def to_cif(self, file_name: str | None = None) -> str:
         cif_string = self._cif_header_to_str()
@@ -91,10 +89,6 @@ class Protein:
         cif_file = io.StringIO(self.to_cif())
         cif_file.seek(0)
         fixer = PDBFixer(cif_file)
-
-        fixer.findMissingResidues()
-        fixer.findMissingAtoms()
-        fixer.addMissingAtoms()
         fixer.addMissingHydrogens()
 
         forcefield = ForceField("amber14-all.xml", "amber14/tip3pfb.xml")
