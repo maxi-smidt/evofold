@@ -41,7 +41,7 @@ rasterio==1.4.3
 requests==2.32.3
 rich==13.9.4
 rioxarray==0.18.1
-scipy==1.14.1
+scipy==1.15.0
 setuptools==75.6.0
 sh==2.1.0
 shapely==2.0.6
