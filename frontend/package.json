@@ -18,7 +18,7 @@
     "@angular/platform-browser": "^19.1.5",
     "@angular/platform-browser-dynamic": "^19.0.3",
     "@angular/router": "^19.0.5",
-    "molstar": "^4.9.0",
+    "molstar": "^4.11.0",
     "ngx-structure-viewer": "^0.0.23",
     "primeflex": "^3.3.1",
     "primeicons": "^7.0.0",
