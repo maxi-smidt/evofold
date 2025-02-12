@@ -1,10 +1,8 @@
-import copy
 import time
-
 import numpy as np
+
 from heapq import nsmallest
 from typing import List, Callable
-
 from openmm.unit import Quantity
 
 from backend.structure.protein import Protein
@@ -24,11 +22,15 @@ class EvolutionStrategy1:
         return nsmallest(self.population_size, children, fitness)
 
     def _create_initial_population(self, sequence) -> List[Protein]:
-        base_protein = Protein(sequence)
-        return [copy.deepcopy(base_protein) for _ in range(self.population_size)]
+        return [Protein(sequence) for _ in range(self.population_size)]
 
     def _mutate_protein(self, protein: Protein, sigma: float) -> Protein:
-        ...
+        return Protein(protein.sequence, self._gaussian_mutation(protein.angles, sigma))
+
+    @staticmethod
+    def _gaussian_mutation(angles: List[float], sigma: float) -> List[float]:
+        mutations = np.random.normal(0, sigma, size=len(angles))
+        return np.clip(np.array(angles) + mutations, Protein.ANGLE_MIN, Protein.ANGLE_MAX).tolist()
 
     def _adaptive_adaption(self, sigma, success_rate: float) -> float:
         if np.isclose(success_rate, self.theta):
@@ -51,7 +53,7 @@ class EvolutionStrategy1:
                 parent = population[np.random.randint(self.population_size)]
                 child = self._mutate_protein(parent, sigma)
 
-                if child.fitness() > parent.fitness():
+                if child.fitness > parent.fitness:
                     s += 1
 
                 children.append(child)
@@ -71,7 +73,7 @@ class EvolutionStrategy1:
 def main():
     # EvolutionStrategy1().run("PEPTIDE")
     p = Protein("ARNDCQEGHILKMFPSTWYV")
-    print(p.fitness())
+    print(p.fitness)
     print(p.to_cif())
 
 # current fitness for ARNDCQEGHILKMFPSTWYV: 9.79537141081154e+19 kJ/mol

@@ -1,44 +1,66 @@
 import io
 
-from dataclasses import dataclass, field
 from itertools import count
-from typing import List
+from random import randint
+from typing import List, Optional
 from openmm import VerletIntegrator
 from openmm.app import Simulation, ForceField, NoCutoff
-from openmm.unit import pico, Quantity
+from openmm.unit import pico, kilojoule_per_mole
 
 from backend.structure.amino_acid import AminoAcid
 from backend.structure.fixer.pdbfixer import PDBFixer
 
 
-@dataclass
 class Protein:
-    sequence: str
-    amino_acids: List[AminoAcid] = field(init=False)
+    ANGLE_MIN = -180
+    ANGLE_MAX = 180
 
-    def __post_init__(self):
+    def __init__(self, sequence: str, angles: Optional[List[float]] = None):
+        self._sequence:     str             = sequence
+        self._amino_acids:  List[AminoAcid] = []
+        self._fitness:      Optional[float] = None
+        self._cif_str:      Optional[str]   = None
+        self._angles:       List[float]     = angles or self._get_random_angles(sequence)  # ϕ and ψ angles alternating
+
+        self._compute_structure()
+
+    def _compute_structure(self):
         previous_aa = None
-        self.amino_acids = []
-        for i, aa in enumerate(self.sequence):
-            current_aa = AminoAcid(i, aa, previous_aa, i == len(self.sequence) - 1)
-            self.amino_acids.append(current_aa)
+        for i, aa in enumerate(self._sequence):
+            current_aa = AminoAcid(i, aa, previous_aa, i == len(self._sequence) - 1)
+            self._amino_acids.append(current_aa)
             previous_aa = current_aa
         previous_aa = None
-        for aa in self.amino_acids[::-1]:
+        for aa in self._amino_acids[::-1]:
             if previous_aa is not None:
                 aa.next_aa = previous_aa
             previous_aa = aa
 
-    def to_cif(self, file_name: str | None = None) -> str:
-        cif_string = self._cif_header_to_str()
-        cif_string += self._cif_seperator_to_str()
-        cif_string += self._cif_positions_to_str()
+    @property
+    def sequence(self) -> str:
+        return self._sequence
+
+    @property
+    def angles(self) -> List[float]:
+        return self._angles
+
+    @property
+    def fitness(self) -> float:
+        if self._fitness is None:
+            self._compute_fitness()
+        return self._fitness
+
+    def to_cif(self, file_name: Optional[str] = None) -> str:
+        if self._cif_str is None:
+            self._cif_str = self._cif_header_to_str()
+            self._cif_str += self._cif_seperator_to_str()
+            self._cif_str += self._cif_positions_to_str()
 
         if file_name is not None:
             with open(file_name, 'w') as f:
-                f.write(cif_string)
+                f.write(self._cif_str)
 
-        return cif_string
+        return self._cif_str
 
     def _cif_positions_to_str(self) -> str:
         atom_header = [
@@ -52,7 +74,7 @@ class Protein:
         positions_string = '\n'.join(atom_header)
         atom_nr = count(start=1)
         aa_nr = count(start=1)
-        for aa in self.amino_acids:
+        for aa in self._amino_acids:
             seq_id = next(aa_nr)
             for atom in aa.atoms:
                 data = [
@@ -79,13 +101,17 @@ class Protein:
         return positions_string
 
     def _cif_header_to_str(self):
-        return f'data_EvoFold_{self.sequence}\n'
+        return f'data_EvoFold_{self._sequence}\n'
 
     @staticmethod
     def _cif_seperator_to_str():
         return '#\n'
 
-    def fitness(self) -> Quantity:
+    @staticmethod
+    def _get_random_angles(sequence: str) -> List[float]:
+        return [randint(Protein.ANGLE_MIN, Protein.ANGLE_MAX) for _ in range(len(sequence)*2)]
+
+    def _compute_fitness(self) -> None:
         cif_file = io.StringIO(self.to_cif())
         cif_file.seek(0)
         fixer = PDBFixer(cif_file)
@@ -98,4 +124,4 @@ class Protein:
         simulation = Simulation(fixer.topology, system, integrator)
         simulation.context.setPositions(fixer.positions)
         state = simulation.context.getState(getEnergy=True)
-        return state.getPotentialEnergy()
+        self._fitness = state.getPotentialEnergy().value_in_unit(kilojoule_per_mole)
