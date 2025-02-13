@@ -2,7 +2,7 @@ import io
 
 from itertools import count
 from random import randint
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from openmm import VerletIntegrator
 from openmm.app import Simulation, ForceField, NoCutoff
 from openmm.unit import pico, kilojoule_per_mole
@@ -10,17 +10,19 @@ from openmm.unit import pico, kilojoule_per_mole
 from backend.structure.amino_acid import AminoAcid
 from backend.structure.fixer.pdbfixer import PDBFixer
 
+AngleList = List[Tuple[float, float, float]]
 
 class Protein:
     ANGLE_MIN = -180
     ANGLE_MAX = 180
+    FORCE_FIELD = ForceField("amber14-all.xml", "amber14/tip3pfb.xml")
 
-    def __init__(self, sequence: str, angles: Optional[List[float]] = None):
+    def __init__(self, sequence: str, angles: Optional[AngleList] = None):
         self._sequence:     str             = sequence
         self._amino_acids:  List[AminoAcid] = []
         self._fitness:      Optional[float] = None
         self._cif_str:      Optional[str]   = None
-        self._angles:       List[float]     = angles or self._get_random_angles(sequence)  # ϕ and ψ angles alternating
+        self._angles:       AngleList       = angles or self._get_random_angles(sequence)  # ϕ and ψ angles alternating
 
         self._compute_structure()
 
@@ -41,7 +43,7 @@ class Protein:
         return self._sequence
 
     @property
-    def angles(self) -> List[float]:
+    def angles(self) -> AngleList:
         return self._angles
 
     @property
@@ -108,8 +110,9 @@ class Protein:
         return '#\n'
 
     @staticmethod
-    def _get_random_angles(sequence: str) -> List[float]:
-        return [randint(Protein.ANGLE_MIN, Protein.ANGLE_MAX) for _ in range(len(sequence)*2)]
+    def _get_random_angles(sequence: str) -> AngleList:
+        rand = lambda: randint(Protein.ANGLE_MIN, Protein.ANGLE_MAX)
+        return [(rand(), rand(), 180) for _ in range(len(sequence))]
 
     def _compute_fitness(self) -> None:
         cif_file = io.StringIO(self.to_cif())
@@ -117,9 +120,7 @@ class Protein:
         fixer = PDBFixer(cif_file)
         fixer.addMissingHydrogens()
 
-        forcefield = ForceField("amber14-all.xml", "amber14/tip3pfb.xml")
-
-        system = forcefield.createSystem(fixer.topology, nonbondedMethod=NoCutoff)
+        system = self.FORCE_FIELD.createSystem(fixer.topology, nonbondedMethod=NoCutoff)
         integrator = VerletIntegrator(0.001 * pico.factor)
         simulation = Simulation(fixer.topology, system, integrator)
         simulation.context.setPositions(fixer.positions)
