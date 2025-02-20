@@ -106,13 +106,13 @@ class AminoAcid:
         # Step 1: Compute current N.
         # Here we set the peptide bond dihedral to the predecessor’s ψ.
         N_new = self._build_atom(prev_N, prev_CA, prev_C,
-                           bond_length=1.329, bond_angle=116.2, dihedral=self._predecessor.psi)
+                           bond_length=rc.n_c, bond_angle=116.2, dihedral=self._predecessor.psi)
         # Step 2: Compute current CA using the current residue’s φ.
         CA_new = self._build_atom(prev_CA, prev_C, N_new,
-                            bond_length=1.458, bond_angle=121.7, dihedral=self.phi)
+                            bond_length=1.458, bond_angle=121.7, dihedral=0)
         # Step 3: Compute current C using a fixed ω = 180°.
         C_new = self._build_atom(prev_C, N_new, CA_new,
-                           bond_length=1.525, bond_angle=110.4, dihedral=180)
+                           bond_length=1.525, bond_angle=110.4, dihedral=self.phi)
 
         transformed = {'N': N_new, 'CA': CA_new, 'C': C_new}
 
@@ -122,8 +122,6 @@ class AminoAcid:
         template_N = np.array(atom_positions['N'])
         template_CA = np.array(atom_positions['CA'])
         template_C = np.array(atom_positions['C'])
-
-        # Build a local coordinate system from the template backbone.
         t_e1 = template_CA - template_N
         t_e1 /= np.linalg.norm(t_e1)
         t_e2 = template_C - template_CA
@@ -150,3 +148,4 @@ class AminoAcid:
                 transformed[atom_id] = new_pos
 
         return transformed
+
