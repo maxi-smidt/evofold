@@ -2,15 +2,15 @@ import io
 
 from itertools import count
 from random import randint
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from openmm import VerletIntegrator
 from openmm.app import Simulation, ForceField, NoCutoff
 from openmm.unit import pico, kilojoule_per_mole
 
 from backend.structure.amino_acid import AminoAcid
 from backend.structure.fixer.pdbfixer import PDBFixer
+from backend.structure.types import AngleList
 
-AngleList = List[Tuple[float, float, float]]
 
 class Protein:
     ANGLE_MIN = -180
@@ -28,15 +28,10 @@ class Protein:
 
     def _compute_structure(self):
         previous_aa = None
-        for i, aa in enumerate(self._sequence):
-            current_aa = AminoAcid(i, aa, previous_aa, i == len(self._sequence) - 1)
+        for i, (aa, angles) in enumerate(zip(self._sequence, self._angles)):
+            current_aa = AminoAcid(i, aa, angles, previous_aa, i == len(self._sequence) - 1)
             self._amino_acids.append(current_aa)
             previous_aa = current_aa
-        previous_aa = None
-        for aa in self._amino_acids[::-1]:
-            if previous_aa is not None:
-                aa.next_aa = previous_aa
-            previous_aa = aa
 
     @property
     def sequence(self) -> str:
