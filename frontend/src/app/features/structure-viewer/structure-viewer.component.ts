@@ -3,16 +3,17 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {SimulationService} from '../../services/simulation.service';
 import {Subject, Subscription} from 'rxjs';
 import {NgxStructureViewerComponent, Settings, Source} from 'ngx-structure-viewer';
-import {SimulationData} from '../../types/SimulationData';
-import {ResultEntries, ResultEntry} from '../../types/ResultEntry';
+import {ResultEntries, SimulationData} from '../../types/SimulationData';
 import {LocalStorageService} from '../../services/local-storage.service';
 import {v4 as uuidv4} from 'uuid';
 import {environment} from '../../../environments/environment';
+import {Button} from 'primeng/button';
 
 @Component({
   selector: 'app-structure-viewer',
   imports: [
     NgxStructureViewerComponent,
+    Button,
   ],
   templateUrl: './structure-viewer.component.html',
   styleUrl: './structure-viewer.component.css'
@@ -30,7 +31,7 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
   };
   protected source: Source | undefined;
   protected results: ResultEntries = {};
-  protected currentResultEntry: ResultEntry | undefined;
+  protected currentResultEntry: SimulationData | undefined;
 
   constructor(private route: ActivatedRoute,
               private router: Router,
@@ -67,7 +68,7 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     const data = JSON.parse(msg.data) as SimulationData;
     const key = uuidv4();
     this.localStorageService.set(key, data.cifFile);
-    this.results[key] = {generation: data.generation, fitness: data.fitness, sequence: data.sequence};
+    this.results[key] = data;
 
     if (this.source === undefined) {
       this.onEntryClick(key);
@@ -90,4 +91,13 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
   }
 
   protected readonly Object = Object;
+
+  onDownloadClick(cif: string) {
+    const newBlob = new Blob([cif], {type: "text/plain"});
+    const data = window.URL.createObjectURL(newBlob);
+    const link = document.createElement("a");
+    link.href = data;
+    link.download = `EvoFold_${new Date().toISOString()}.cif`;
+    link.click();
+  }
 }

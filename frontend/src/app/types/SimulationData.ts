@@ -1,6 +1,11 @@
 export interface SimulationData {
   generation: number;
-  fitness: string;
+  fitness: number;
   sequence: string;
   cifFile: string;
+  sigma: number;
+}
+
+export interface ResultEntries {
+  [localStorageKey: string]: SimulationData;
 }
