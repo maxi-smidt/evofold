@@ -1,7 +1,7 @@
 affine==2.4.0
 annotated-types==0.7.0
 anyio==4.8.0
-attrs==24.2.0
+attrs==25.1.0
 bio==1.7.1
 biopython==1.85
 biothings_client==0.4.1
