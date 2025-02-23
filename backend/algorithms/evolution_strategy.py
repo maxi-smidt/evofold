@@ -2,8 +2,6 @@ import time
 import numpy as np
 
 from heapq import nsmallest
-from multiprocessing import Pool
-from pyinstrument import Profiler
 from typing import List, Callable
 
 from backend.algorithms.evolution_strategy_params import EvolutionStrategyParams
@@ -51,7 +49,7 @@ class EvolutionStrategy:
         child = EvolutionStrategy._mutate_protein(parent, sigma)
         return child, child.fitness < parent.fitness
 
-    def run(self, sequence: str, callback: Callable[[dict], None] = None, callback_frequency: int = 1) -> Protein:
+    def run(self, sequence: str, callback: Callable[[int, Protein, float], None] = None, callback_frequency: int = 1) -> Protein:
         generation: int = 0
         s = 0.0
         k = 2
@@ -77,11 +75,8 @@ class EvolutionStrategy:
                 sigma = self._adaptive_adaption(sigma, s / (k * self._params.children_size))
                 s = 0
 
-            print(f'{generation};{(time.time() - start_time) * 1000:.2f};{sigma}', end='')
             if callback is not None and generation % callback_frequency == 0:
-                callback({'generation': generation,
-                          'protein': min(population, key=lambda p: p.fitness),
-                          'sigma': sigma})
+                callback(generation, min(population, key=lambda p: p.fitness), sigma)
 
             generation += 1
         return min(population, key=lambda p: p.fitness)
