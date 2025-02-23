@@ -28,9 +28,10 @@ async def simulate(websocket: WebSocket):
         async def send_data(generation: int, protein: Protein, sigma: float) -> None:
             data = {
                 "generation": generation,
-                "fitness": protein.fitness,
+                "fitness": round(protein.fitness, 2),
                 "cifFile": protein.cif_str,
-                "sequence": sequence
+                "sequence": sequence,
+                "sigma": round(sigma, 2),
             }
             await websocket.send_json(data)
 
