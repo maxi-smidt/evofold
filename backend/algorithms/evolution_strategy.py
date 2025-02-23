@@ -6,30 +6,24 @@ from multiprocessing import Pool
 from pyinstrument import Profiler
 from typing import List, Callable
 
+from backend.algorithms.evolution_strategy_params import EvolutionStrategyParams
 from backend.structure.protein import Protein, AngleList
 
 
-class EvolutionStrategy1:
-    def __init__(self):
-        self.generations        = 500   # the amount of generations that will be produced
-        self.population_size    = 100   # the size of the population
-        self.children_size      = 600   # the amount of children produced by one population
-        self.plus_selection     = False # if true (µ+λ) else (µ,λ)
-        self.theta              = 0.2   # threshold for adaptive adaption (1 / 5 success rule)
-        self.alpha              = 1.224 # modification factor
-
-        assert self.population_size < self.children_size
+class EvolutionStrategy:
+    def __init__(self, params: EvolutionStrategyParams):
+        self._params = params
 
     def _make_selection(self, children: List[Protein]) -> List[Protein]:
         fitness: Callable[[Protein], float] = lambda p: p.fitness
-        return nsmallest(self.population_size, children, fitness)
+        return nsmallest(self._params.population_size, children, fitness)
 
     def _create_initial_population(self, sequence) -> List[Protein]:
-        return [Protein(sequence) for _ in range(self.population_size)]
+        return [Protein(sequence) for _ in range(self._params.population_size)]
 
     @staticmethod
     def _mutate_protein(protein: Protein, sigma: float) -> Protein:
-        return Protein(protein.sequence, EvolutionStrategy1._gaussian_mutation(protein.angles, sigma))
+        return Protein(protein.sequence, EvolutionStrategy._gaussian_mutation(protein.angles, sigma))
 
     @staticmethod
     def _gaussian_mutation(angles: AngleList, sigma: float) -> AngleList:
@@ -45,53 +39,55 @@ class EvolutionStrategy1:
         return mutated_angles
 
     def _adaptive_adaption(self, sigma, success_rate: float) -> float:
-        if np.isclose(success_rate, self.theta):
+        if np.isclose(success_rate, self._params.theta):
             return sigma
-        if success_rate < self.theta:
-            return sigma / self.alpha
-        return sigma * self.alpha
+        if success_rate < self._params.theta:
+            return sigma / self._params.alpha
+        return sigma * self._params.alpha
 
     @staticmethod
     def process_child(args):
         parent, sigma = args
-        child = EvolutionStrategy1._mutate_protein(parent, sigma)
-        return child, child.fitness < parent.fitness * 0.95
+        child = EvolutionStrategy._mutate_protein(parent, sigma)
+        return child, child.fitness < parent.fitness
 
-    def run(self, sequence: str, callback: Callable[[int, Protein], None] = None, callback_frequency: int = 1) -> Protein:
+    def run(self, sequence: str, callback: Callable[[dict], None] = None, callback_frequency: int = 1) -> Protein:
         generation: int = 0
         s = 0.0
         k = 2
-        sigma: float = 1
+        sigma: float = Protein.ANGLE_MAX * 0.1
         population: List[Protein] = self._create_initial_population(sequence)
 
-        while generation < self.generations:
-            children: List[Protein] = population if self.plus_selection else []
+        while generation < self._params.generations:
+            children: List[Protein] = population if self._params.plus_selection else []
             start_time = time.time()
 
-            parents = [population[np.random.randint(self.population_size)] for _ in range(self.children_size)]
+            for _ in range(self._params.children_size):
+                parent = population[np.random.randint(self._params.population_size)]
+                child = self._mutate_protein(parent, sigma)
 
-            with Pool() as pool:
-                results = pool.map(self.process_child, [(parent, sigma) for parent in parents])
-
-            for child, success in results:
-                children.append(child)
-                if success:
+                if child.fitness < parent.fitness:
                     s += 1
+
+                children.append(child)
+
             population = self._make_selection(children)
 
             if generation % k == 0:
-                sigma = self._adaptive_adaption(sigma, s / (k * self.children_size))
+                sigma = self._adaptive_adaption(sigma, s / (k * self._params.children_size))
                 s = 0
 
-            print(f'Generation {generation}: {(time.time() - start_time) * 1000:.2f}ms, sigma: {sigma}')
+            print(f'{generation};{(time.time() - start_time) * 1000:.2f};{sigma}', end='')
             if callback is not None and generation % callback_frequency == 0:
-                callback(generation, min(population, key=lambda p: p.fitness))
+                callback({'generation': generation,
+                          'protein': min(population, key=lambda p: p.fitness),
+                          'sigma': sigma})
 
             generation += 1
         return min(population, key=lambda p: p.fitness)
 
 def main():
-    # p = EvolutionStrategy1().run("ARNDCQEGHILKMFPSTWYV", lambda i, x: print(x.fitness, x.angles))
+    # p = EvolutionStrategy1().run("AAAA", lambda i, x: print(f";{x.fitness};{x.angles}"))
     p = Protein("AAA", [(120, 30, 0), (-140, 60, 0), (50, 120, 0)])
     print(f"fitness: {p.fitness}")
     """
@@ -118,14 +114,14 @@ def main():
     # print(p.to_cif())
     """
 
-profiler = Profiler()
-profiler.start()
+# profiler = Profiler()
+# profiler.start()
 
 if __name__ == "__main__":
     start_time = time.time()
-    for _ in range(1):
+    for _ in range(100):
         main()
     print(f'{(time.time() - start_time) * 1000:.2f}ms')
 
-profiler.stop()
-print(profiler.output_text(unicode=True, color=True))
+# profiler.stop()
+# print(profiler.output_text(unicode=True, color=True))

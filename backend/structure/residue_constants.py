@@ -1,6 +1,6 @@
 ca_ca = 3.80209737096
-n_c = 1.33092035825
-c_o = 1.23373943765
+n_c   = 1.33092035825
+c_o   = 1.23373943765
 
 rigid_group_atom_positions = {
     'ALA': {
@@ -263,19 +263,3 @@ restype_1to3 = {
     'Y': 'TYR',
     'V': 'VAL',
 }
-
-def atom_id_to_type(atom_id: str) -> str:
-  if atom_id.startswith('C'):
-    return 'C'
-  elif atom_id.startswith('N'):
-    return 'N'
-  elif atom_id.startswith('O'):
-    return 'O'
-  elif atom_id.startswith('H'):
-    return 'H'
-  elif atom_id.startswith('S'):
-    return 'S'
-  raise ValueError('Atom ID not recognized.')
-
-
-restype_3to1 = {v: k for k, v in restype_1to3.items()}

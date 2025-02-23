@@ -1,11 +1,10 @@
-import io
-
+from io import StringIO
 from itertools import count
 from random import randint
-from typing import List, Optional
 from openmm import VerletIntegrator
 from openmm.app import Simulation, ForceField, NoCutoff, PDBxFile
 from openmm.unit import pico, kilojoule_per_mole
+from typing import List, Optional
 
 from backend.structure.amino_acid import AminoAcid
 from backend.structure.types import AngleList
@@ -16,11 +15,13 @@ class Protein:
     ANGLE_MAX = 180
 
     def __init__(self, sequence: str, angles: Optional[AngleList] = None):
-        self._sequence:     str             = sequence
-        self._amino_acids:  List[AminoAcid] = []
-        self._fitness:      Optional[float] = None
-        self._cif_str:      Optional[str]   = None
-        self._angles:       AngleList       = angles or self._get_random_angles(sequence)  # ϕ and ψ angles alternating
+        self._sequence:    str             = sequence
+        self._amino_acids: List[AminoAcid] = []
+        self._fitness:     Optional[float] = None
+        self._cif_str:     Optional[str]   = None
+        self._angles:      AngleList       = angles or self._get_random_angles(sequence)  # ϕ and ψ angles alternating
+
+        assert not angles or len(angles) == len(sequence)
 
         self._compute_structure()
         self._compute_cif()
@@ -105,9 +106,7 @@ class Protein:
         return [(rand(), rand(), 180) for _ in range(len(sequence))]
 
     def _compute_fitness(self) -> None:
-        cif_file = io.StringIO(self._cif_str)
-        pdbx = PDBxFile(cif_file)
-
+        pdbx = PDBxFile(StringIO(self._cif_str))
         force_field = ForceField("amber14/protein.ff14SB.xml")
         system = force_field.createSystem(pdbx.topology, nonbondedMethod=NoCutoff)
         integrator = VerletIntegrator(0.001 * pico.factor)
