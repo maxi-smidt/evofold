@@ -1,13 +1,13 @@
 import time
 import numpy as np
 
-from concurrent.futures import ProcessPoolExecutor
 from heapq import nsmallest
+from multiprocessing import Pool
+from pyinstrument import Profiler
 from typing import List, Callable
 
 from backend.structure.protein import Protein, AngleList
 
-from Bio import PDB
 
 class EvolutionStrategy1:
     def __init__(self):
@@ -17,6 +17,8 @@ class EvolutionStrategy1:
         self.plus_selection     = False # if true (µ+λ) else (µ,λ)
         self.theta              = 0.2   # threshold for adaptive adaption (1 / 5 success rule)
         self.alpha              = 1.224 # modification factor
+
+        assert self.population_size < self.children_size
 
     def _make_selection(self, children: List[Protein]) -> List[Protein]:
         fitness: Callable[[Protein], float] = lambda p: p.fitness
@@ -53,47 +55,46 @@ class EvolutionStrategy1:
     def process_child(args):
         parent, sigma = args
         child = EvolutionStrategy1._mutate_protein(parent, sigma)
-        return child, child.fitness > parent.fitness
+        return child, child.fitness < parent.fitness * 0.95
 
-    def run(self, sequence: str, callback: Callable[[int, Protein], None] = None, callback_frequency: int = 5) -> Protein:
+    def run(self, sequence: str, callback: Callable[[int, Protein], None] = None, callback_frequency: int = 1) -> Protein:
         generation: int = 0
         s = 0.0
         k = 2
-        sigma: float = 0
+        sigma: float = 1
         population: List[Protein] = self._create_initial_population(sequence)
 
         while generation < self.generations:
             children: List[Protein] = population if self.plus_selection else []
             start_time = time.time()
 
-            for _ in range(self.children_size):
-                parent = population[np.random.randint(self.population_size)]
-                child = self._mutate_protein(parent, sigma)
+            parents = [population[np.random.randint(self.population_size)] for _ in range(self.children_size)]
 
-                if child.fitness > parent.fitness:
-                    s += 1
+            with Pool() as pool:
+                results = pool.map(self.process_child, [(parent, sigma) for parent in parents])
 
+            for child, success in results:
                 children.append(child)
-
+                if success:
+                    s += 1
             population = self._make_selection(children)
 
             if generation % k == 0:
                 sigma = self._adaptive_adaption(sigma, s / (k * self.children_size))
                 s = 0
 
+            print(f'Generation {generation}: {(time.time() - start_time) * 1000:.2f}ms, sigma: {sigma}')
             if callback is not None and generation % callback_frequency == 0:
                 callback(generation, min(population, key=lambda p: p.fitness))
 
-            print(f'Generation {generation}: {(time.time() - start_time) * 1000:.2f}ms')
             generation += 1
         return min(population, key=lambda p: p.fitness)
 
-
 def main():
-    # p = EvolutionStrategy1().run("PEPTIDE")
+    # p = EvolutionStrategy1().run("ARNDCQEGHILKMFPSTWYV", lambda i, x: print(x.fitness, x.angles))
     p = Protein("AAA", [(120, 30, 0), (-140, 60, 0), (50, 120, 0)])
-    p.to_cif("test_1902.cif")
     print(f"fitness: {p.fitness}")
+    """
     print(f"angles: {p.angles}")
     parser = PDB.MMCIFParser()
     structure = parser.get_structure("protein", "test_1902.cif")
@@ -115,10 +116,16 @@ def main():
 
     # print(p.fitness)
     # print(p.to_cif())
+    """
 
+profiler = Profiler()
+profiler.start()
 
 if __name__ == "__main__":
+    start_time = time.time()
     for _ in range(1):
-        start_time = time.time()
         main()
-        print(f'{(time.time() - start_time) * 1000:.2f}ms')
+    print(f'{(time.time() - start_time) * 1000:.2f}ms')
+
+profiler.stop()
+print(profiler.output_text(unicode=True, color=True))

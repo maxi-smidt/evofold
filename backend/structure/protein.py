@@ -4,18 +4,16 @@ from itertools import count
 from random import randint
 from typing import List, Optional
 from openmm import VerletIntegrator
-from openmm.app import Simulation, ForceField, NoCutoff
+from openmm.app import Simulation, ForceField, NoCutoff, PDBxFile
 from openmm.unit import pico, kilojoule_per_mole
 
 from backend.structure.amino_acid import AminoAcid
-from backend.structure.fixer.pdbfixer import PDBFixer
 from backend.structure.types import AngleList
 
 
 class Protein:
     ANGLE_MIN = -180
     ANGLE_MAX = 180
-    FORCE_FIELD = ForceField("amber14-all.xml", "amber14/tip3pfb.xml")
 
     def __init__(self, sequence: str, angles: Optional[AngleList] = None):
         self._sequence:     str             = sequence
@@ -25,13 +23,15 @@ class Protein:
         self._angles:       AngleList       = angles or self._get_random_angles(sequence)  # ϕ and ψ angles alternating
 
         self._compute_structure()
+        self._compute_cif()
+        self._compute_fitness()
 
     def _compute_structure(self):
-        previous_aa = None
+        predecessor = None
         for i, (aa, angles) in enumerate(zip(self._sequence, self._angles)):
-            current_aa = AminoAcid(i, aa, angles, previous_aa, i == len(self._sequence) - 1)
+            current_aa = AminoAcid(i, aa, angles, predecessor, i == len(self._sequence) - 1)
             self._amino_acids.append(current_aa)
-            previous_aa = current_aa
+            predecessor = current_aa
 
     @property
     def sequence(self) -> str:
@@ -43,21 +43,16 @@ class Protein:
 
     @property
     def fitness(self) -> float:
-        if self._fitness is None:
-            self._compute_fitness()
         return self._fitness
 
-    def to_cif(self, file_name: Optional[str] = None) -> str:
-        if self._cif_str is None:
-            self._cif_str = self._cif_header_to_str()
-            self._cif_str += self._cif_seperator_to_str()
-            self._cif_str += self._cif_positions_to_str()
-
-        if file_name is not None:
-            with open(file_name, 'w') as f:
-                f.write(self._cif_str)
-
+    @property
+    def cif_str(self) -> str:
         return self._cif_str
+
+    def _compute_cif(self) -> None:
+        self._cif_str = self._cif_header_to_str()
+        self._cif_str += self._cif_seperator_to_str()
+        self._cif_str += self._cif_positions_to_str()
 
     def _cif_positions_to_str(self) -> str:
         atom_header = [
@@ -110,14 +105,13 @@ class Protein:
         return [(rand(), rand(), 180) for _ in range(len(sequence))]
 
     def _compute_fitness(self) -> None:
-        cif_file = io.StringIO(self.to_cif())
-        cif_file.seek(0)
-        fixer = PDBFixer(cif_file)
-        fixer.addMissingHydrogens()
+        cif_file = io.StringIO(self._cif_str)
+        pdbx = PDBxFile(cif_file)
 
-        system = self.FORCE_FIELD.createSystem(fixer.topology, nonbondedMethod=NoCutoff)
+        force_field = ForceField("amber14/protein.ff14SB.xml")
+        system = force_field.createSystem(pdbx.topology, nonbondedMethod=NoCutoff)
         integrator = VerletIntegrator(0.001 * pico.factor)
-        simulation = Simulation(fixer.topology, system, integrator)
-        simulation.context.setPositions(fixer.positions)
+        simulation = Simulation(pdbx.topology, system, integrator)
+        simulation.context.setPositions(pdbx.positions)
         state = simulation.context.getState(getEnergy=True)
         self._fitness = state.getPotentialEnergy().value_in_unit(kilojoule_per_mole)
