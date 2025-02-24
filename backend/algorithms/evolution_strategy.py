@@ -88,7 +88,7 @@ class EvolutionStrategy:
         return min(population, key=lambda p: p.fitness)
 
     def _reached_premature_termination(self, best_offspring: Protein) -> bool:
-        if best_offspring.fitness == self._previous_best.fitness:
+        if self._previous_best is None or best_offspring.fitness == self._previous_best.fitness:
             self._previous_best_count += 1
         if self._previous_best_count == self._params.premature_termination:
             return True
