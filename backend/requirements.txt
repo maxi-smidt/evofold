@@ -33,7 +33,7 @@ pandas==2.2.3
 pillow==11.0.0
 platformdirs==4.3.6
 pooch==1.8.2
-pydantic==2.10.3
+pydantic==2.10.6
 pydantic_core==2.27.1
 Pygments==2.18.0
 pyinstrument==5.0.1
