@@ -1,7 +1,6 @@
 import asyncio
 import json
 
-from Bio.Pathway.Rep.MultiGraph import df_search
 from fastapi import FastAPI
 from starlette.websockets import WebSocket
 

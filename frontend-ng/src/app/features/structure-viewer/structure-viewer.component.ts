@@ -67,7 +67,9 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
   handleMessage(msg: MessageEvent): void {
     const data = JSON.parse(msg.data) as SimulationData;
     const key = uuidv4();
-    this.localStorageService.set(key, data.cifFile);
+    this.localStorageService.
+
+    set(key, data.cifFile);
     this.results[key] = data;
 
     if (this.source === undefined) {
