@@ -11,6 +11,8 @@ from backend.structure.protein import Protein, AngleList
 class EvolutionStrategy:
     def __init__(self, params: EvolutionStrategyParams):
         self._params = params
+        self._previous_best = None
+        self._previous_best_count = 0
 
     def _make_selection(self, children: List[Protein]) -> List[Protein]:
         fitness: Callable[[Protein], float] = lambda p: p.fitness
@@ -57,8 +59,8 @@ class EvolutionStrategy:
         population: List[Protein] = self._create_initial_population(sequence)
 
         while generation < self._params.generations:
+            generation += 1
             children: List[Protein] = population if self._params.plus_selection else []
-            start_time = time.time()
 
             for _ in range(self._params.children_size):
                 parent = population[np.random.randint(self._params.population_size)]
@@ -75,11 +77,24 @@ class EvolutionStrategy:
                 sigma = self._adaptive_adaption(sigma, s / (k * self._params.children_size))
                 s = 0
 
-            if callback is not None and generation % callback_frequency == 0:
-                callback(generation, min(population, key=lambda p: p.fitness), sigma)
+            best_offspring = min(population, key=lambda p: p.fitness)
 
-            generation += 1
+            if self._params.premature_termination is not None and self._reached_premature_termination(best_offspring):
+                return best_offspring
+
+            if callback is not None and generation % callback_frequency == 0:
+                callback(generation, best_offspring, sigma)
+
         return min(population, key=lambda p: p.fitness)
+
+    def _reached_premature_termination(self, best_offspring: Protein) -> bool:
+        if best_offspring.fitness == self._previous_best.fitness:
+            self._previous_best_count += 1
+        if self._previous_best_count == self._params.premature_termination:
+            return True
+        self._previous_best = best_offspring
+        return False
+
 
 def main():
     # p = EvolutionStrategy1().run("AAAA", lambda i, x: print(f";{x.fitness};{x.angles}"))
