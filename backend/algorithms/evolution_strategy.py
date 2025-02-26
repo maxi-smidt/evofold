@@ -88,17 +88,20 @@ class EvolutionStrategy:
         return min(population, key=lambda p: p.fitness)
 
     def _reached_premature_termination(self, best_offspring: Protein) -> bool:
-        if self._previous_best is None or best_offspring.fitness == self._previous_best.fitness:
-            self._previous_best_count += 1
-        if self._previous_best_count == self._params.premature_termination:
-            return True
+        if self._previous_best is not None:
+            if best_offspring.fitness == self._previous_best.fitness:
+                self._previous_best_count += 1
+            else:
+                self._previous_best_count = 0
+            if self._previous_best_count == self._params.premature_termination:
+                return True
         self._previous_best = best_offspring
         return False
 
 
 def main():
-    # p = EvolutionStrategy1().run("AAAA", lambda i, x: print(f";{x.fitness};{x.angles}"))
-    p = Protein("AAA", [(120, 30, 0), (-140, 60, 0), (50, 120, 0)])
+    p = EvolutionStrategy(EvolutionStrategyParams()).run("AAAA")
+    # p = Protein("AAA", [(120, 30, 0), (-140, 60, 0), (50, 120, 0)])
     print(f"fitness: {p.fitness}")
     """
     print(f"angles: {p.angles}")
@@ -129,7 +132,7 @@ def main():
 
 if __name__ == "__main__":
     start_time = time.time()
-    for _ in range(100):
+    for _ in range(1):
         main()
     print(f'{(time.time() - start_time) * 1000:.2f}ms')
 
