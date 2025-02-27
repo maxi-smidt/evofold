@@ -8,6 +8,7 @@ import {LocalStorageService} from '../../services/local-storage.service';
 import {v4 as uuidv4} from 'uuid';
 import {environment} from '../../../environments/environment';
 import {Button} from 'primeng/button';
+import {EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
 
 @Component({
   selector: 'app-structure-viewer',
@@ -40,12 +41,9 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const seq = this.route.snapshot.paramMap.get('sequence');
+    const sequence: string = history.state.sequence;
+    const params: EvolutionStrategyParams = history.state.params;
     this.localStorageService.clearAll();
-    if (!seq) {
-      this.router.navigate(['/']).then();
-      return;
-    }
 
     this.subject = this.simulationService.connect(environment.apiUrl);
     this.subscription = this.subject.subscribe({
@@ -53,8 +51,8 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
       error: (err: any) => console.error('WebSocket error:', err),
       complete: () => console.log('WebSocket connection closed')
     });
-    this.sequence = seq;
-    this.subject.next(this.sequence as unknown as MessageEvent);
+    this.sequence = sequence;
+    this.subject.next({params, sequence} as unknown as MessageEvent);
   }
 
   ngOnDestroy() {
@@ -67,9 +65,7 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
   handleMessage(msg: MessageEvent): void {
     const data = JSON.parse(msg.data) as SimulationData;
     const key = uuidv4();
-    this.localStorageService.
-
-    set(key, data.cifFile);
+    this.localStorageService.set(key, data.cifFile);
     this.results[key] = data;
 
     if (this.source === undefined) {
