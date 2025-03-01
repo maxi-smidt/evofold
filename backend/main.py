@@ -24,7 +24,7 @@ async def simulate(websocket: WebSocket):
 
         message = await websocket.receive_json()
         sequence = message["sequence"]
-
+        print(message)
         params = json.loads(re.sub(r'(?<!^)(?=[A-Z])', '_', json.dumps(message["params"])).lower())
 
         esp = EvolutionStrategyParams(**params)
