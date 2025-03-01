@@ -57,15 +57,15 @@ class EvolutionStrategy:
         k = 2
         sigma: float = Protein.ANGLE_MAX * 0.1
         population: List[Protein] = self._create_initial_population(sequence)
-        print('start')
+
         while generation < self._params.generations:
             generation += 1
             children: List[Protein] = population if self._params.plus_selection else []
-            print('1')
+
             for _ in range(self._params.children_size):
                 parent = population[np.random.randint(self._params.population_size)]
                 child = self._mutate_protein(parent, sigma)
-                print('2')
+
                 if child.fitness < parent.fitness:
                     s += 1
 
