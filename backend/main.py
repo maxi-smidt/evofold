@@ -21,10 +21,10 @@ def get_health():
 async def simulate(websocket: WebSocket):
     await websocket.accept()
     try:
-
+        print("Waiting to receive message...")
         message = await websocket.receive_json()
+        print(f"Received message: {message}")
         sequence = message["sequence"]
-        print(message)
         params = json.loads(re.sub(r'(?<!^)(?=[A-Z])', '_', json.dumps(message["params"])).lower())
 
         esp = EvolutionStrategyParams(**params)
@@ -48,4 +48,6 @@ async def simulate(websocket: WebSocket):
         await loop.run_in_executor(None, lambda: es.run(sequence, sync_callback))
 
     except Exception as e:
-        print(f"Connection closed: {e}")
+        print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
