@@ -1,0 +1,12 @@
+textarea {
+  resize: none;
+}
+
+:host ::ng-deep .p-selectbutton {
+  display: flex;
+  flex-direction: row;
+}
+
+label {
+  user-select: none;
+}

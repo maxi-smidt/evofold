@@ -1,7 +1,8 @@
 import asyncio
 import json
+import re
+import traceback
 
-from Bio.Pathway.Rep.MultiGraph import df_search
 from fastapi import FastAPI
 from starlette.websockets import WebSocket
 
@@ -21,8 +22,11 @@ def get_health():
 async def simulate(websocket: WebSocket):
     await websocket.accept()
     try:
-        sequence = json.loads(await websocket.receive_text())
-        esp = EvolutionStrategyParams()
+        message = await websocket.receive_json()
+        sequence = message["sequence"]
+        params = json.loads(re.sub(r'(?<!^)(?=[A-Z])', '_', json.dumps(message["params"])).lower())
+
+        esp = EvolutionStrategyParams(**params)
         es = EvolutionStrategy(esp)
 
         async def send_data(generation: int, protein: Protein, sigma: float) -> None:
@@ -43,4 +47,5 @@ async def simulate(websocket: WebSocket):
         await loop.run_in_executor(None, lambda: es.run(sequence, sync_callback))
 
     except Exception as e:
-        print(f"Connection closed: {e}")
+        print(f"Error: {e}")
+        traceback.print_exc()

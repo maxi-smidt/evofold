@@ -1,3 +1,4 @@
+import os
 from io import StringIO
 from itertools import count
 from random import randint
@@ -107,7 +108,7 @@ class Protein:
 
     def _compute_fitness(self) -> None:
         pdbx = PDBxFile(StringIO(self._cif_str))
-        force_field = ForceField("amber14/protein.ff14SB.xml")
+        force_field = ForceField(os.path.abspath("backend/structure/forcefield/amber_modified.xml"))
         system = force_field.createSystem(pdbx.topology, nonbondedMethod=NoCutoff)
         integrator = VerletIntegrator(0.001 * pico.factor)
         simulation = Simulation(pdbx.topology, system, integrator)

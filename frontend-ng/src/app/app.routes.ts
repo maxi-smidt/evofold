@@ -7,7 +7,7 @@ export const routes: Routes = [
   {
     path: '', component: LayoutComponent, children: [
       { path: '', component: HomeComponent },
-      { path: 'structure/:sequence', component: StructureViewerComponent },
+      { path: 'structure', component: StructureViewerComponent },
     ]
   },
   { path: '**', redirectTo: '', pathMatch: 'full' },

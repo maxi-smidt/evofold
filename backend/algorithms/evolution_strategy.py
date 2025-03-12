@@ -1,4 +1,3 @@
-import time
 import numpy as np
 
 from heapq import nsmallest
@@ -11,6 +10,8 @@ from backend.structure.protein import Protein, AngleList
 class EvolutionStrategy:
     def __init__(self, params: EvolutionStrategyParams):
         self._params = params
+        self._previous_best = None
+        self._previous_best_count = 0
 
     def _make_selection(self, children: List[Protein]) -> List[Protein]:
         fitness: Callable[[Protein], float] = lambda p: p.fitness
@@ -57,8 +58,8 @@ class EvolutionStrategy:
         population: List[Protein] = self._create_initial_population(sequence)
 
         while generation < self._params.generations:
+            generation += 1
             children: List[Protein] = population if self._params.plus_selection else []
-            start_time = time.time()
 
             for _ in range(self._params.children_size):
                 parent = population[np.random.randint(self._params.population_size)]
@@ -75,48 +76,23 @@ class EvolutionStrategy:
                 sigma = self._adaptive_adaption(sigma, s / (k * self._params.children_size))
                 s = 0
 
-            if callback is not None and generation % callback_frequency == 0:
-                callback(generation, min(population, key=lambda p: p.fitness), sigma)
+            best_offspring = min(population, key=lambda p: p.fitness)
 
-            generation += 1
+            if self._params.premature_termination is not None and self._reached_premature_termination(best_offspring):
+                return best_offspring
+
+            if callback is not None and generation % callback_frequency == 0:
+                callback(generation, best_offspring, sigma)
+
         return min(population, key=lambda p: p.fitness)
 
-def main():
-    # p = EvolutionStrategy1().run("AAAA", lambda i, x: print(f";{x.fitness};{x.angles}"))
-    p = Protein("AAA", [(120, 30, 0), (-140, 60, 0), (50, 120, 0)])
-    print(f"fitness: {p.fitness}")
-    """
-    print(f"angles: {p.angles}")
-    parser = PDB.MMCIFParser()
-    structure = parser.get_structure("protein", "test_1902.cif")
-
-    model = structure[0]
-
-    for chain in model:
-        polypeptides = PDB.PPBuilder().build_peptides(chain)
-
-        for poly in polypeptides:
-            phi_psi_angles = poly.get_phi_psi_list()  # List of (phi, psi) tuples
-            for aa in phi_psi_angles:
-                if aa[0] and aa[1]:
-                    print(f"phi: {np.rad2deg(aa[0]):.2f}, psi: {np.rad2deg(aa[1]):.2f}")
-                elif not aa[0]:
-                    print(f"phi: None, psi: {np.rad2deg(aa[1]):.2f}")
-                else:
-                    print(f"phi: {np.rad2deg(aa[0]):.2f}, psi: None")
-
-    # print(p.fitness)
-    # print(p.to_cif())
-    """
-
-# profiler = Profiler()
-# profiler.start()
-
-if __name__ == "__main__":
-    start_time = time.time()
-    for _ in range(100):
-        main()
-    print(f'{(time.time() - start_time) * 1000:.2f}ms')
-
-# profiler.stop()
-# print(profiler.output_text(unicode=True, color=True))
+    def _reached_premature_termination(self, best_offspring: Protein) -> bool:
+        if self._previous_best is not None:
+            if best_offspring.fitness == self._previous_best.fitness:
+                self._previous_best_count += 1
+            else:
+                self._previous_best_count = 1
+            if self._previous_best_count == self._params.premature_termination:
+                return True
+        self._previous_best = best_offspring
+        return False
