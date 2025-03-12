@@ -7,7 +7,7 @@
           placeholder="Enter your sequence..."
           (input)="onInput($event)"
           [(ngModel)]="sequence"
-          [ngClass]="{'ng-invalid': hasError, 'ng-dirty' : hasError }">
+          [ngClass]="{'ng-invalid': errorMessage !== null, 'ng-dirty' : errorMessage !== null }">
         </textarea>
     </div>
 
@@ -86,13 +86,13 @@
 
       <div class="p-fluid">
         <p-button class="w-12" label="Simulate" severity="secondary" outlined
-                  [disabled]="hasError || sequence.trim().length === 0"
+                  [disabled]="errorMessage !== null || sequence.trim().length === 0"
                   (click)="onSimulateClick()"/>
       </div>
     </div>
   </div>
 
-  @if (hasError) {
+  @if (errorMessage !== null) {
     <p-message class="p-fluid" severity="error" [text]=errorMessage>
       Invalid sequence
     </p-message>
