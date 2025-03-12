@@ -1,4 +1,3 @@
-import time
 import numpy as np
 
 from heapq import nsmallest
@@ -92,49 +91,8 @@ class EvolutionStrategy:
             if best_offspring.fitness == self._previous_best.fitness:
                 self._previous_best_count += 1
             else:
-                self._previous_best_count = 0
+                self._previous_best_count = 1
             if self._previous_best_count == self._params.premature_termination:
                 return True
         self._previous_best = best_offspring
         return False
-
-
-def main():
-    p = EvolutionStrategy(EvolutionStrategyParams()).run("AAAA")
-    # p = Protein("AAA", [(120, 30, 0), (-140, 60, 0), (50, 120, 0)])
-    print(f"fitness: {p.fitness}")
-    """
-    print(f"angles: {p.angles}")
-    parser = PDB.MMCIFParser()
-    structure = parser.get_structure("protein", "test_1902.cif")
-
-    model = structure[0]
-
-    for chain in model:
-        polypeptides = PDB.PPBuilder().build_peptides(chain)
-
-        for poly in polypeptides:
-            phi_psi_angles = poly.get_phi_psi_list()  # List of (phi, psi) tuples
-            for aa in phi_psi_angles:
-                if aa[0] and aa[1]:
-                    print(f"phi: {np.rad2deg(aa[0]):.2f}, psi: {np.rad2deg(aa[1]):.2f}")
-                elif not aa[0]:
-                    print(f"phi: None, psi: {np.rad2deg(aa[1]):.2f}")
-                else:
-                    print(f"phi: {np.rad2deg(aa[0]):.2f}, psi: None")
-
-    # print(p.fitness)
-    # print(p.to_cif())
-    """
-
-# profiler = Profiler()
-# profiler.start()
-
-if __name__ == "__main__":
-    start_time = time.time()
-    for _ in range(1):
-        main()
-    print(f'{(time.time() - start_time) * 1000:.2f}ms')
-
-# profiler.stop()
-# print(profiler.output_text(unicode=True, color=True))

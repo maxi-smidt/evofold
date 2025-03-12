@@ -13,4 +13,4 @@ class EvolutionStrategyParams:
     premature_termination: Optional[int] = 10    # if not none it terminates the algorithm if the best protein has not changed for n generations
 
     def __post_init__(self):
-        assert self.population_size < self.children_size
+        assert self.population_size <= self.children_size
