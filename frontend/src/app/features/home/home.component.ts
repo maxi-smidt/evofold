@@ -1,19 +1,19 @@
 import {Component} from '@angular/core';
 import {Button} from 'primeng/button';
 import {FormsModule} from '@angular/forms';
-import {InputTextareaModule} from 'primeng/inputtextarea';
 import {NgClass} from '@angular/common';
 import {MessageModule} from 'primeng/message';
 import {Router} from '@angular/router';
+import {TextareaModule} from 'primeng/textarea';
 
 @Component({
   selector: 'app-home',
   imports: [
     Button,
     FormsModule,
-    InputTextareaModule,
     NgClass,
     MessageModule,
+    TextareaModule,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'

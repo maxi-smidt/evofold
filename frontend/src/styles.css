@@ -1,7 +1,9 @@
-@import "primeng/resources/themes/lara-light-blue/theme.css";
-@import "primeng/resources/primeng.css";
 @import "primeicons/primeicons.css";
 
 body {
   margin: 0;
+}
+
+html, body {
+  font-family: "Helvetica", "Arial", sans-serif !important;
 }
