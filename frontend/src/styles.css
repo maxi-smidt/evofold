@@ -1,0 +1,9 @@
+@import "primeicons/primeicons.css";
+
+body {
+  margin: 0;
+}
+
+html, body {
+  font-family: "Helvetica", "Arial", sans-serif !important;
+}
