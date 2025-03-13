@@ -1,46 +1,60 @@
-import io
-
-from dataclasses import dataclass, field
+import os
+from io import StringIO
 from itertools import count
-from typing import List
+from random import randint
 from openmm import VerletIntegrator
-from openmm.app import Simulation, ForceField, NoCutoff
-from openmm.unit import pico, Quantity
+from openmm.app import Simulation, ForceField, NoCutoff, PDBxFile
+from openmm.unit import pico, kilojoule_per_mole
+from typing import List, Optional
 
 from backend.structure.amino_acid import AminoAcid
-from backend.structure.fixer.pdbfixer import PDBFixer
+from backend.structure.types import AngleList
 
 
-@dataclass
 class Protein:
-    sequence: str
-    amino_acids: List[AminoAcid] = field(init=False)
+    ANGLE_MIN = -180
+    ANGLE_MAX = 180
 
-    def __post_init__(self):
-        previous_aa = None
-        self.amino_acids = []
-        for i, aa in enumerate(self.sequence):
-            current_aa = AminoAcid(i, aa, previous_aa)
-            self.amino_acids.append(current_aa)
-            previous_aa = current_aa
-        previous_aa = None
-        for aa in self.amino_acids[::-1]:
-            if previous_aa is not None:
-                aa.next_aa = previous_aa
-            previous_aa = aa
+    def __init__(self, sequence: str, angles: Optional[AngleList] = None):
+        self._sequence:    str             = sequence
+        self._amino_acids: List[AminoAcid] = []
+        self._fitness:     Optional[float] = None
+        self._cif_str:     Optional[str]   = None
+        self._angles:      AngleList       = angles or self._get_random_angles(sequence)  # ϕ and ψ angles alternating
 
+        assert not angles or len(angles) == len(sequence)
 
+        self._compute_structure()
+        self._compute_cif()
+        self._compute_fitness()
 
-    def to_cif(self, file_name: str | None = None) -> str:
-        cif_string = self._cif_header_to_str()
-        cif_string += self._cif_seperator_to_str()
-        cif_string += self._cif_positions_to_str()
+    def _compute_structure(self):
+        predecessor = None
+        for i, (aa, angles) in enumerate(zip(self._sequence, self._angles)):
+            current_aa = AminoAcid(i, aa, angles, predecessor, i == len(self._sequence) - 1)
+            self._amino_acids.append(current_aa)
+            predecessor = current_aa
 
-        if file_name is not None:
-            with open(file_name, 'w') as f:
-                f.write(cif_string)
+    @property
+    def sequence(self) -> str:
+        return self._sequence
 
-        return cif_string
+    @property
+    def angles(self) -> AngleList:
+        return self._angles
+
+    @property
+    def fitness(self) -> float:
+        return self._fitness
+
+    @property
+    def cif_str(self) -> str:
+        return self._cif_str
+
+    def _compute_cif(self) -> None:
+        self._cif_str = self._cif_header_to_str()
+        self._cif_str += self._cif_seperator_to_str()
+        self._cif_str += self._cif_positions_to_str()
 
     def _cif_positions_to_str(self) -> str:
         atom_header = [
@@ -54,7 +68,7 @@ class Protein:
         positions_string = '\n'.join(atom_header)
         atom_nr = count(start=1)
         aa_nr = count(start=1)
-        for aa in self.amino_acids:
+        for aa in self._amino_acids:
             seq_id = next(aa_nr)
             for atom in aa.atoms:
                 data = [
@@ -81,27 +95,23 @@ class Protein:
         return positions_string
 
     def _cif_header_to_str(self):
-        return f'data_EvoFold_{self.sequence}\n'
+        return f'data_EvoFold_{self._sequence}\n'
 
     @staticmethod
     def _cif_seperator_to_str():
         return '#\n'
 
-    def fitness(self) -> Quantity:
-        cif_file = io.StringIO(self.to_cif())
-        cif_file.seek(0)
-        fixer = PDBFixer(cif_file)
+    @staticmethod
+    def _get_random_angles(sequence: str) -> AngleList:
+        rand = lambda: randint(Protein.ANGLE_MIN, Protein.ANGLE_MAX)
+        return [(rand(), rand(), 180) for _ in range(len(sequence))]
 
-        fixer.findMissingResidues()
-        fixer.findMissingAtoms()
-        fixer.addMissingAtoms()
-        fixer.addMissingHydrogens()
-
-        forcefield = ForceField("amber14-all.xml", "amber14/tip3pfb.xml")
-
-        system = forcefield.createSystem(fixer.topology, nonbondedMethod=NoCutoff)
+    def _compute_fitness(self) -> None:
+        pdbx = PDBxFile(StringIO(self._cif_str))
+        force_field = ForceField(os.path.abspath("backend/structure/forcefield/amber_modified.xml"))
+        system = force_field.createSystem(pdbx.topology, nonbondedMethod=NoCutoff)
         integrator = VerletIntegrator(0.001 * pico.factor)
-        simulation = Simulation(fixer.topology, system, integrator)
-        simulation.context.setPositions(fixer.positions)
+        simulation = Simulation(pdbx.topology, system, integrator)
+        simulation.context.setPositions(pdbx.positions)
         state = simulation.context.getState(getEnergy=True)
-        return state.getPotentialEnergy()
+        self._fitness = state.getPotentialEnergy().value_in_unit(kilojoule_per_mole)

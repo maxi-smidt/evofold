@@ -1,9 +1,13 @@
 import asyncio
 import json
+import re
+import traceback
 
 from fastapi import FastAPI
 from starlette.websockets import WebSocket
 
+from backend.algorithms.evolution_strategy import EvolutionStrategy
+from backend.algorithms.evolution_strategy_params import EvolutionStrategyParams
 from backend.structure.protein import Protein
 
 
@@ -18,18 +22,30 @@ def get_health():
 async def simulate(websocket: WebSocket):
     await websocket.accept()
     try:
-        sequence = json.loads(await websocket.receive_text())
-        generation = 0
-        while generation < 20:
-            structure = Protein(sequence)
+        message = await websocket.receive_json()
+        sequence = message["sequence"]
+        params = json.loads(re.sub(r'(?<!^)(?=[A-Z])', '_', json.dumps(message["params"])).lower())
+
+        esp = EvolutionStrategyParams(**params)
+        es = EvolutionStrategy(esp)
+
+        async def send_data(generation: int, protein: Protein, sigma: float) -> None:
             data = {
                 "generation": generation,
-                "fitness": str(structure.fitness()),
-                "cifFile": structure.to_cif(),
-                "sequence": sequence
+                "fitness": round(protein.fitness, 2),
+                "cifFile": protein.cif_str,
+                "sequence": sequence,
+                "sigma": round(sigma, 2),
             }
-            generation += 1
             await websocket.send_json(data)
-            await asyncio.sleep(5)
+
+        def sync_callback(generation: int, protein: Protein, sigma: float):
+            future = asyncio.run_coroutine_threadsafe(send_data(generation, protein, sigma), loop)
+            future.result()
+
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, lambda: es.run(sequence, sync_callback))
+
     except Exception as e:
-        print(f"Connection closed: {e}")
+        print(f"Error: {e}")
+        traceback.print_exc()
