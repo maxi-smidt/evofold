@@ -1,7 +1,7 @@
 import {Component} from '@angular/core';
 import {Button} from 'primeng/button';
 import {FormsModule} from '@angular/forms';
-import {InputTextareaModule} from 'primeng/inputtextarea';
+import {TextareaModule} from 'primeng/textarea';
 import {NgClass} from '@angular/common';
 import {MessageModule} from 'primeng/message';
 import {Router} from '@angular/router';
@@ -19,7 +19,7 @@ import {ToastModule} from 'primeng/toast';
   imports: [
     Button,
     FormsModule,
-    InputTextareaModule,
+    TextareaModule,
     NgClass,
     MessageModule,
     SliderModule,

@@ -3,7 +3,7 @@
     <div class="flex w-5">
         <textarea
           class="w-full h-full"
-          pInputTextarea
+          pTextarea
           placeholder="Enter your sequence..."
           (input)="onInput($event)"
           [(ngModel)]="sequence"
@@ -43,32 +43,29 @@
           </div>
         </div>
 
-        <div class="p-fluid">
-          <p-selectButton
-            [options]="stateOptions"
-            [(ngModel)]="plusSelection"
-            optionLabel="label"
-            optionValue="value">
+          <p-selectButton class="p-fluid"
+                          [options]="stateOptions" [(ngModel)]="plusSelection"
+                          optionLabel="label" optionValue="value">
           </p-selectButton>
-        </div>
+
       </div>
 
-      <div class="flex flex-column gap-3 p-fluid">
+      <div class="flex flex-column gap-3">
         <div>
-          <label>Theta
+          <label class="pr-2">Theta
             <i class="pi pi-info-circle"
                pTooltip="The threshold for the succession rate in the adaptive adaption that determines how sigma is modified."
                tooltipPosition="top"></i>
           </label>
-          <p-inputNumber class="mt-1" [(ngModel)]="params.theta" [showButtons]="true" [step]="0.1" [min]="0" />
+          <p-inputNumber class="mt-1 w-full" [(ngModel)]="params.theta" [showButtons]="true" [step]="0.1" [min]="0"/>
         </div>
         <div>
-          <label>Alpha
+          <label class="pr-2">Alpha
             <i class="pi pi-info-circle"
                pTooltip="The factor that is used to modify sigma in the adaptive adaption."
                tooltipPosition="top"></i>
           </label>
-          <p-inputNumber class="mt-1" [(ngModel)]="params.alpha" [showButtons]="true" [min]="1" [step]="0.025"/>
+          <p-inputNumber class="mt-1 w-full" [(ngModel)]="params.alpha" [showButtons]="true" [min]="1" [step]="0.025"/>
         </div>
         <div>
           <label>Premature Termination
@@ -78,7 +75,8 @@
           </label>
           <div class="flex mt-1 align-items-center gap-2">
             <p-inputSwitch [(ngModel)]="prematureTermination"/>
-            <p-inputNumber [min]="2" [(ngModel)]="params.prematureTermination" [showButtons]="true"
+            <p-inputNumber class="w-full"
+                           [min]="2" [(ngModel)]="params.prematureTermination" [showButtons]="true"
                            [disabled]="params.prematureTermination === null"/>
           </div>
         </div>
@@ -93,10 +91,8 @@
   </div>
 
   @if (hasError) {
-    <p-message class="p-fluid" severity="error" [text]=errorMessage>
-      Invalid sequence
-    </p-message>
-  }
+    <p-message class="p-fluid" severity="error" [text]=errorMessage/>
+      }
 </div>
 
-<p-toast />
+<p-toast/>
