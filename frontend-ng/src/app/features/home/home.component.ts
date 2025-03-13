@@ -36,9 +36,7 @@ import {ToastModule} from 'primeng/toast';
 export class HomeComponent {
   aminoAcids = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'];
   sequence: string = '';
-  hasError = false;
-  errorMessage = "This sequence should only contain 'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', " +
-    "'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'."
+  errorMessage: string | null = null;
   stateOptions: any[] = [{label: '(µ+λ)-Selection', value: 'plus'}, {label: '(µ,λ)-Selection', value: 'comma'}];
 
   params: EvolutionStrategyParams = {
@@ -61,7 +59,16 @@ export class HomeComponent {
     this.sequence = inputElement.value.toUpperCase();
     inputElement.value = this.sequence;
 
-    this.hasError = [...this.sequence].some(char => !this.aminoAcids.includes(char));
+    this.errorMessage = null;
+
+    if (this.sequence.length < 2) {
+      this.errorMessage = "The sequence must be at least two amino acids."
+    }
+
+    if ([...this.sequence].some(char => !this.aminoAcids.includes(char))) {
+      this.errorMessage = "This sequence should only contain 'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', " +
+        "'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'."
+    }
   }
 
   onSimulateClick() {
