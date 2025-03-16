@@ -7,7 +7,7 @@
           placeholder="Enter your sequence..."
           (input)="onInput($event)"
           [(ngModel)]="sequence"
-          [ngClass]="{'ng-invalid': hasError, 'ng-dirty' : hasError }">
+          [ngClass]="{'ng-invalid': errorMessage !== null, 'ng-dirty' : errorMessage !== null }">
         </textarea>
     </div>
 
@@ -43,8 +43,7 @@
           </div>
         </div>
 
-          <p-selectButton class="p-fluid"
-                          [options]="stateOptions" [(ngModel)]="plusSelection"
+          <p-selectButton [options]="stateOptions" [(ngModel)]="plusSelection"
                           optionLabel="label" optionValue="value">
           </p-selectButton>
 
@@ -84,15 +83,15 @@
 
       <div class="p-fluid">
         <p-button class="w-12" label="Simulate" severity="secondary" outlined
-                  [disabled]="hasError || sequence.trim().length === 0"
+                  [disabled]="errorMessage !== null || sequence.trim().length === 0"
                   (click)="onSimulateClick()"/>
       </div>
     </div>
   </div>
 
-  @if (hasError) {
-    <p-message class="p-fluid" severity="error" [text]=errorMessage/>
-      }
+  @if (errorMessage !== null) {
+    <p-message class="p-fluid" severity="error" [text]=errorMessage />
+  }
 </div>
 
 <p-toast/>

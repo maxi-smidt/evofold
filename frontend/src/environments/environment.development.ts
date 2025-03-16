@@ -1,4 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'ws://localhost:8000/api/simulate'
+  wsUrl: 'ws://localhost:8000/api/simulate',
+  apiUrl: 'http://localhost:8000/api',
 };

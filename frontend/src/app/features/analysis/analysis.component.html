@@ -1,0 +1,43 @@
+<div class="flex flex-column w-full min-h-full">
+  <!-- Parent container for viewers, should expand -->
+  <div class="flex flex-grow-1">
+    <div
+      class="flex flex-grow-1 min-h-full relative border-right-2 border-dashed border-y-none border-left-none border-white">
+      @if (source1) {
+        <ngx-structure-viewer
+          [settings]="settings"
+          [source]="source1"/>
+      }
+    </div>
+
+    <div class="flex flex-grow-1 min-h-full relative">
+      @if (source2) {
+        <ngx-structure-viewer
+          [settings]="settings"
+          [source]="source2"/>
+      }
+    </div>
+  </div>
+
+  <div class="flex flex-column h-9rem border-top-2 border-dashed border-x-none border-bottom-none border-white">
+    <div class="flex w-full">
+      <div class="flex w-6 p-2">
+        <p-fileupload mode="basic" chooseLabel="Choose" chooseIcon="pi pi-upload" name="demo[]" accept=".cif"
+                      (onSelect)="onSelect($event)"/>
+        <p-button label="Upload" class="ml-3" (onClick)="onUpload()" [disabled]="!file"/>
+      </div>
+
+      <div class="flex w-6 p-2">
+        <p-fileupload mode="basic" chooseLabel="Choose" chooseIcon="pi pi-upload" name="demo[]" accept=".cif"
+                      (onSelect)="onSelect($event)"/>
+        <p-button label="Align" class="ml-3" (onClick)="onAlign()" [disabled]="!source1 || !source2"/>
+      </div>
+    </div>
+    @if (sequence && angles) {
+      <div class="flex flex-column p-2 gap-2">
+        <span class="text-2xl text-gray-500 font-light">Sequence: {{ sequence }}</span>
+        <span class="text-2xl text-gray-500 font-light">Angles: {{ angles }}</span>
+      </div>
+    }
+  </div>
+</div>

@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'wss://evofold.projekte.fh-hagenberg.at/api/simulate'
+  wsUrl: 'wss://evofold.projekte.fh-hagenberg.at/api/simulate',
+  apiUrl: 'https://evofold.projekte.fh-hagenberg.at/api',
 };

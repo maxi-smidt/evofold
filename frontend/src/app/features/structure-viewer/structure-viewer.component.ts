@@ -45,7 +45,7 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     const params: EvolutionStrategyParams = history.state.params;
     this.localStorageService.clearAll();
 
-    this.subject = this.simulationService.connect(environment.apiUrl);
+    this.subject = this.simulationService.connect(environment.wsUrl);
     this.subscription = this.subject.subscribe({
       next: (msg: MessageEvent) => this.handleMessage(msg),
       error: (err: any) => console.error('WebSocket error:', err),

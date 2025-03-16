@@ -8,9 +8,6 @@ export class SimulationService {
   private subject: Subject<MessageEvent> | undefined;
   private ws: WebSocket | undefined;
 
-  constructor() {
-  }
-
   public connect(url: string): Subject<MessageEvent> {
     if (!this.subject) {
       this.subject = this.create(url);
