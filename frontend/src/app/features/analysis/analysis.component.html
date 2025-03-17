@@ -29,14 +29,18 @@
 
       <div class="flex w-6 p-2">
         <p-fileupload mode="basic" chooseLabel="Choose" chooseIcon="pi pi-upload" name="demo[]" accept=".cif"
-                      (onSelect)="onSelect($event)"/>
+                      (onSelect)="onSelect($event,true)"/>
         <p-button label="Align" class="ml-3" (onClick)="onAlign()" [disabled]="!source1 || !source2"/>
       </div>
     </div>
     @if (sequence && angles) {
       <div class="flex flex-column p-2 gap-2">
-        <span class="text-2xl text-gray-500 font-light">Sequence: {{ sequence }}</span>
-        <span class="text-2xl text-gray-500 font-light">Angles: {{ angles }}</span>
+        <span pTooltip="{{ sequence }}" class="text-2xl text-gray-500 font-light white-space-nowrap overflow-hidden text-overflow-ellipsis">
+          Sequence: {{ sequence }}
+        </span>
+        <span pTooltip="{{ angles }}" class="text-2xl text-gray-500 font-light white-space-nowrap overflow-hidden text-overflow-ellipsis">
+          Angles: {{ angles }}
+        </span>
       </div>
     }
   </div>
