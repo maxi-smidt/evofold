@@ -108,7 +108,8 @@ class Protein:
 
     def _compute_fitness(self) -> None:
         pdbx = PDBxFile(StringIO(self._cif_str))
-        force_field = ForceField(os.path.abspath("backend/structure/forcefield/amber_modified.xml"))
+        print(os.path.abspath("structure/forcefield/amber_modified.xml"))
+        force_field = ForceField(os.path.abspath("structure/forcefield/amber_modified.xml"))
         system = force_field.createSystem(pdbx.topology, nonbondedMethod=NoCutoff)
         integrator = VerletIntegrator(0.001 * pico.factor)
         simulation = Simulation(pdbx.topology, system, integrator)
