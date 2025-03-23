@@ -1,65 +1,76 @@
 import {Injectable} from '@angular/core';
-import {Observable, Subject} from 'rxjs';
+import {Observable} from 'rxjs';
+import {webSocket, WebSocketSubject} from 'rxjs/webSocket';
+import {environment} from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SimulationService {
-  private subject: Subject<MessageEvent> | undefined;
-  private ws: WebSocket | undefined;
+  private socket: WebSocketSubject<any> | null = null;
 
-  public connect(url: string): Subject<MessageEvent> {
-    if (!this.subject) {
-      this.subject = this.create(url);
+  private createWebSocket() {
+    if (!this.socket || this.socket.closed) {
+      this.socket = webSocket({url: environment.wsUrl});
     }
-    return this.subject;
   }
 
-  private create(url: string): Subject<MessageEvent> {
-    const subject = new Subject<MessageEvent>();
-
-    this.ws = new WebSocket(url);
-
-    const observable = new Observable<MessageEvent>(observer => {
-      this.ws!.onmessage = (event) => observer.next(event);
-      this.ws!.onerror = (error) => observer.error(error);
-      this.ws!.onclose = () => observer.complete();
-      return () => this.ws!.close();
-    });
-
-    observable.subscribe(subject);
-
-    const sendToWebSocket = (data: any) => {
-      let attempts = 0;
-      const maxAttempts = 100;
-      const interval = 50; // milliseconds
-
-      const trySend = () => {
-        if (this.ws!.readyState === WebSocket.OPEN) {
-          this.ws!.send(JSON.stringify(data));
-        } else if (attempts < maxAttempts) {
-          attempts++;
-          setTimeout(trySend, interval);
-        } else {
-          console.error("Failed to send data: WebSocket is not open.");
-        }
-      };
-
-      trySend();
-    };
-
-    subject.subscribe({
-      next: sendToWebSocket
-    });
-
-    return subject;
+  public sendMessage(message: any) {
+    this.socket!.next(message);
   }
 
-  disconnect(): void {
-    if (this.ws) {
-      this.ws.close();
-      this.ws = undefined;
-      this.subject = undefined;
+  public getMessages(): Observable<any> {
+    this.createWebSocket();
+    return this.socket!.asObservable();
+  }
+
+  public closeConnection() {
+    this.socket?.complete();
+  }
+
+  public convertAtomPositionsToCif(atomPositions: string[][], sequence: string): string {
+    let cifStr = `data_EvoFold_${sequence}\n`;
+    cifStr += '#\n';
+    cifStr += this.cifPositionsToStr(atomPositions);
+    return cifStr;
+  }
+
+  private cifPositionsToStr(atomPositions: string[][]): string {
+    const atomHeader = [
+      'loop_', '_atom_site.group_PDB', '_atom_site.id', '_atom_site.type_symbol', '_atom_site.label_atom_id',
+      '_atom_site.label_alt_id', '_atom_site.label_comp_id', '_atom_site.label_asym_id',
+      '_atom_site.label_entity_id', '_atom_site.label_seq_id', '_atom_site.pdbx_PDB_ins_code',
+      '_atom_site.Cartn_x', '_atom_site.Cartn_y', '_atom_site.Cartn_z', '_atom_site.occupancy',
+      '_atom_site.B_iso_or_equiv', '_atom_site.auth_seq_id', '_atom_site.auth_asym_id',
+      '_atom_site.pdbx_PDB_model_num'
+    ];
+
+    let positionsString = atomHeader.join('\n');
+    for (const aa of atomPositions) {
+      for (const atom of aa[2]) {
+        const data = [
+          'ATOM',       // group_PDB (here always ATOM)
+          `${atom[0]}`, // id
+          atom[1][0],   // type_symbol (e.g. N, O, C)
+          atom[1],      // label_atom_id (e.g. CA, O, H1)
+          '.',          // label_alt_id (always .)
+          aa[1],        // label_comp_id
+          'C',          // label_asym_id (always C)
+          '3',          // label_entity_id (always 3)
+          `${aa[0]}`,   // label_seq_id
+          '?',          // pdbx_PDB_ins_code (always ?)
+          `${atom[2]}`, // Cartn_x
+          `${atom[3]}`, // Cartn_y
+          `${atom[4]}`, // Cartn_z
+          '1.00',       // occupancy (always 1.00)
+          '0.00',       // B_iso_or_equiv (always 0.00)
+          `${aa[0]}`,   // auth_seq_id (like label_seq_id)
+          'A',          // auth_asym_id (always A)
+          '1'           // pdbx_PDB_model_num (1 because we always have only one chain)
+        ];
+        positionsString += '\n' + data.join('\t');
+      }
     }
+    return positionsString;
   }
 }

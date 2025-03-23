@@ -3,7 +3,7 @@
     @for (key of Object.keys(results); track key) {
       <div class="flex border border-1 border-round-lg align-items-center hover:bg-gray-300
                   justify-content-center p-3 select-none cursor-pointer"
-           (click)="onEntryClick(key)">
+           (click)="onEntryClick(key, results[key].sequence)">
         <div class="text-gray-500">Generation {{ results[key].generation }}</div>
       </div>
     }
@@ -38,10 +38,15 @@
               <td class="text-lg text-gray-200 white-space-nowrap overflow-hidden text-overflow-ellipsis">{{ currentResultEntry.sequence }}</td>
             </tr>
           </table>
-          <p-button class="ml-auto" [outlined]="true" icon="pi pi-download"
-                    (onClick)="onDownloadClick(currentResultEntry.cifFile)" />
+          <p-button class="ml-auto" [outlined]="true" icon="pi pi-download" (onClick)="onDownloadClick()" />
         </div>
       }
     </div>
   </div>
 </div>
+
+@if (isLoading) {
+  <div class="overlay">
+    <p-progress-spinner class="center-spinner" />
+  </div>
+}

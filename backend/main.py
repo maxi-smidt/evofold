@@ -13,7 +13,7 @@ from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from io import StringIO
 from pydantic import BaseModel
-from starlette.websockets import WebSocket
+from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from backend.algorithms.evolution_strategy import EvolutionStrategy
 from backend.algorithms.evolution_strategy_params import EvolutionStrategyParams
@@ -55,7 +55,7 @@ async def simulate(websocket: WebSocket):
             data = {
                 "generation": generation,
                 "fitness": round(protein.fitness, 2),
-                "cifFile": protein.cif_str,
+                "atomPositions": protein.atom_positions,
                 "sequence": sequence,
                 "sigma": round(sigma, 2),
             }
