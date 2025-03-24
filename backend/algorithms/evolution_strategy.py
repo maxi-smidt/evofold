@@ -1,7 +1,3 @@
-from functools import partial
-from multiprocessing import Pool
-from multiprocessing.context import TimeoutError
-
 import numpy as np
 
 from heapq import nsmallest
@@ -64,24 +60,14 @@ class EvolutionStrategy:
             generation += 1
             children: List[Protein] = population if self._params.plus_selection else []
 
-            process_child_with_sigma = partial(self.process_child, sigma=sigma)
-            selected_parents = [population[np.random.randint(self._params.population_size)] for _ in
-                                range(self._params.children_size)]
+            for _ in range(self._params.children_size):
+                parent = population[np.random.randint(self._params.population_size)]
+                child = self._mutate_protein(parent, sigma)
 
-            with Pool() as p:
-                results = []
-                for parent in selected_parents:
-                    res = p.apply_async(process_child_with_sigma, (parent,))
-                    results.append(res)
+                if child.fitness < parent.fitness:
+                    s += 1
 
-                for res in results:
-                    try:
-                        child, success = res.get(timeout=10)
-                        children.append(child)
-                        if success:
-                            s += 1
-                    except TimeoutError:
-                        print("child timed out")
+                children.append(child)
 
             population = self._make_selection(children)
 
