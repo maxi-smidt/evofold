@@ -44,11 +44,6 @@ class EvolutionStrategy:
             return sigma / self._params.alpha
         return sigma * self._params.alpha
 
-    @staticmethod
-    def process_child(parent: Protein, sigma: float):
-        child = EvolutionStrategy._mutate_protein(parent, sigma)
-        return child, child.fitness < parent.fitness
-
     def run(self, sequence: str, callback: Callable[[int, Protein, float], None] = None, callback_frequency: int = 1) -> Protein:
         generation: int = 0
         s = 0.0
