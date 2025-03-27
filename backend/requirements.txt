@@ -61,7 +61,7 @@ starlette==0.46.1
 svgwrite==1.4.3
 tqdm==4.67.1
 Tree==0.2.4
-typer==0.15.1
+typer==0.15.2
 typing_extensions==4.12.2
 tzdata==2024.2
 urllib3==2.3.0
