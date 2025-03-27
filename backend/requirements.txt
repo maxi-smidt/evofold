@@ -30,7 +30,7 @@ numpy==2.2.3
 OpenMM==8.2.0
 packaging==24.2
 pandas==2.2.3
-pillow==11.0.0
+pillow==11.1.0
 platformdirs==4.3.6
 pooch==1.8.2
 pydantic==2.10.6
