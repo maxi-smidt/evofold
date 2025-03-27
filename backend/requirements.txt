@@ -42,7 +42,7 @@ pyparsing==3.2.0
 pyproj==3.7.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
-python-multipart==0.0.19
+python-multipart==0.0.20
 pytz==2024.2
 PyYAML==6.0.2
 rasterio==1.4.3
