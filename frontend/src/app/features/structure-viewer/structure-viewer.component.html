@@ -1,6 +1,6 @@
 <div class="flex h-full">
   <div class="flex flex-column bg-gray-200 w-2 p-1 gap-1 overflow-y-scroll">
-    @for (key of Object.keys(results); track key) {
+    @for (key of obj.keys(results); track key) {
       <div class="flex border border-1 border-round-lg align-items-center hover:bg-gray-300
                   justify-content-center p-3 select-none cursor-pointer"
            (click)="onEntryClick(key, results[key].sequence)">
@@ -38,7 +38,10 @@
               <td class="text-lg text-gray-200 white-space-nowrap overflow-hidden text-overflow-ellipsis">{{ currentResultEntry.sequence }}</td>
             </tr>
           </table>
-          <p-button class="ml-auto" [outlined]="true" icon="pi pi-download" (onClick)="onDownloadClick()" />
+          <div class="flex flex-column gap-2">
+            <p-button class="ml-auto" [outlined]="true" icon="pi pi-download" (onClick)="onDownloadClick()" />
+            <p-button class="ml-auto" [outlined]="true" icon="pi pi-chart-scatter" (onClick)="isVisible = true" />
+          </div>
         </div>
       }
     </div>
@@ -50,3 +53,11 @@
     <p-progress-spinner class="center-spinner" />
   </div>
 }
+
+<p-dialog header="Ramachandran Plot" [modal]="true" [(visible)]="isVisible">
+  @if (currentResultEntry) {
+    <app-ramachandran-plot [angles]="currentResultEntry.angles" [sequence]="sequence"/>
+  } @else {
+    Nothing to display yet, select a generation.
+  }
+</p-dialog>

@@ -13,7 +13,7 @@ from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from io import StringIO
 from pydantic import BaseModel
-from starlette.websockets import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocket
 
 from backend.algorithms.evolution_strategy import EvolutionStrategy
 from backend.algorithms.evolution_strategy_params import EvolutionStrategyParams
@@ -58,6 +58,7 @@ async def simulate(websocket: WebSocket):
                 "atomPositions": protein.atom_positions,
                 "sequence": sequence,
                 "sigma": round(sigma, 2),
+                "angles": [(angle[0], angle[1]) for angle in protein.angles],
             }
             await websocket.send_json(data)
 

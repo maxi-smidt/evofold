@@ -14,6 +14,7 @@ from backend.structure.types import AngleList
 class Protein:
     ANGLE_MIN = -180
     ANGLE_MAX = 180
+    BASE_PATH = 'backend/structure' if os.environ['dev'] else 'structure'
 
     def __init__(self, sequence: str, angles: Optional[AngleList] = None):
         self._sequence:    str             = sequence
@@ -124,7 +125,7 @@ class Protein:
 
     def _compute_fitness(self) -> None:
         pdbx = PDBxFile(StringIO(self._cif_str))
-        force_field = ForceField(os.path.abspath("structure/forcefield/amber_modified.xml"))
+        force_field = ForceField(os.path.abspath(self.BASE_PATH + '/forcefield/amber_modified.xml'))
         system = force_field.createSystem(pdbx.topology, nonbondedMethod=NoCutoff)
         integrator = VerletIntegrator(0.001 * pico.factor)
         simulation = Simulation(pdbx.topology, system, integrator)

@@ -9,6 +9,8 @@ import {v4 as uuidv4} from 'uuid';
 import {Button} from 'primeng/button';
 import {EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
 import {ProgressSpinner} from 'primeng/progressspinner';
+import {RamachandranPlotComponent} from '../../shared/ramachandran-plot/ramachandran-plot.component';
+import {Dialog} from 'primeng/dialog';
 
 @Component({
   selector: 'app-structure-viewer',
@@ -16,6 +18,8 @@ import {ProgressSpinner} from 'primeng/progressspinner';
     NgxStructureViewerComponent,
     Button,
     ProgressSpinner,
+    RamachandranPlotComponent,
+    Dialog,
   ],
   templateUrl: './structure-viewer.component.html',
   styleUrl: './structure-viewer.component.css'
@@ -23,6 +27,7 @@ import {ProgressSpinner} from 'primeng/progressspinner';
 export class StructureViewerComponent implements OnInit, OnDestroy {
   protected isLoading: boolean = false;
   protected sequence: string = '';
+  protected isVisible: boolean = false;
   private subscription: Subscription | undefined;
   protected settings: Partial<Settings> = {
     'background-color': '#2b3035ff',
@@ -39,6 +44,10 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
               private router: Router,
               private simulationService: SimulationService,
               private localStorageService: LocalStorageService) {
+  }
+
+  get obj() {
+    return Object;
   }
 
   ngOnInit() {
@@ -92,9 +101,7 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     this.currentResultEntry = this.results[localStorageKey];
   }
 
-  protected readonly Object = Object;
-
-  onDownloadClick() {
+  protected onDownloadClick() {
     const newBlob = new Blob([(this.source as any).data], {type: "text/plain"});
     const data = window.URL.createObjectURL(newBlob);
     const link = document.createElement("a");
