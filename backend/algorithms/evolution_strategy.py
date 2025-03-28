@@ -44,12 +44,13 @@ class EvolutionStrategy:
             return sigma / self._params.alpha
         return sigma * self._params.alpha
 
-    def run(self, sequence: str, callback: Callable[[int, Protein, float], None] = None, callback_frequency: int = 1) -> Protein:
+    def run(self, sequence: str, callback: Callable[[int, Protein, float, bool], None] = None, callback_frequency: int = 1) -> Protein:
         generation: int = 0
         s = 0.0
         k = 2
         sigma: float = Protein.ANGLE_MAX * 0.1
         population: List[Protein] = self._create_initial_population(sequence)
+        best_offspring = min(population, key=lambda p: p.fitness)
 
         while generation < self._params.generations:
             generation += 1
@@ -72,13 +73,18 @@ class EvolutionStrategy:
 
             best_offspring = min(population, key=lambda p: p.fitness)
 
-            if self._params.premature_termination is not None and self._reached_premature_termination(best_offspring):
-                return best_offspring
+            is_premature_termination = self._is_premature_termination(best_offspring)
 
             if callback is not None and generation % callback_frequency == 0:
-                callback(generation, best_offspring, sigma)
+                callback(generation, best_offspring, sigma, is_premature_termination or (generation >= self._params.generations))
 
-        return min(population, key=lambda p: p.fitness)
+            if is_premature_termination:
+                return best_offspring
+
+        return best_offspring
+
+    def _is_premature_termination(self, best_offspring: Protein) -> bool:
+        return self._params.premature_termination is not None and self._reached_premature_termination(best_offspring)
 
     def _reached_premature_termination(self, best_offspring: Protein) -> bool:
         if self._previous_best is not None:

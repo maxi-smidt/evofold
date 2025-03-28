@@ -9,6 +9,12 @@ import {v4 as uuidv4} from 'uuid';
 import {Button} from 'primeng/button';
 import {EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
 import {ProgressSpinner} from 'primeng/progressspinner';
+import {RamachandranPlotComponent} from '../../shared/ramachandran-plot/ramachandran-plot.component';
+import {Dialog} from 'primeng/dialog';
+import {Tooltip} from 'primeng/tooltip';
+import {FitnessPlotComponent} from '../../shared/fitness-plot/fitness-plot.component';
+import {Slider, SliderSlideEndEvent} from 'primeng/slider';
+import {FormsModule} from '@angular/forms';
 
 @Component({
   selector: 'app-structure-viewer',
@@ -16,13 +22,25 @@ import {ProgressSpinner} from 'primeng/progressspinner';
     NgxStructureViewerComponent,
     Button,
     ProgressSpinner,
+    RamachandranPlotComponent,
+    Dialog,
+    Tooltip,
+    FitnessPlotComponent,
+    Slider,
+    FormsModule,
   ],
   templateUrl: './structure-viewer.component.html',
   styleUrl: './structure-viewer.component.css'
 })
 export class StructureViewerComponent implements OnInit, OnDestroy {
+  protected receivedLast: boolean = false;
   protected isLoading: boolean = false;
   protected sequence: string = '';
+  protected isRamachandranVisible: boolean = false;
+  protected isSummaryVisible: boolean = false;
+  protected generationRange: [number, number] = [0, 0];
+  protected fixedGenerationRange: [number, number] = [0, 0];
+
   private subscription: Subscription | undefined;
   protected settings: Partial<Settings> = {
     'background-color': '#2b3035ff',
@@ -33,12 +51,18 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
   };
   protected source: Source | undefined;
   protected results: ResultEntries = {};
+  protected resultsArray: StoredSimulationData[] = [];
+  protected selectedResultsArray: StoredSimulationData[] = [];
   protected currentResultEntry: StoredSimulationData | undefined;
 
   constructor(private route: ActivatedRoute,
               private router: Router,
               private simulationService: SimulationService,
               private localStorageService: LocalStorageService) {
+  }
+
+  get obj() {
+    return Object;
   }
 
   ngOnInit() {
@@ -72,6 +96,13 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     const key = uuidv4();
     this.localStorageService.set(key, simulationData.atomPositions);
     this.results[key] = simulationData;
+    this.resultsArray = [...this.resultsArray, simulationData];
+    if (simulationData.isLast) {
+      this.receivedLast = simulationData.isLast;
+      this.generationRange = [1, simulationData.generation];
+      this.fixedGenerationRange = [1, simulationData.generation];
+      this.selectedResultsArray = this.resultsArray;
+    }
     if (this.source === undefined) {
       this.onEntryClick(key, simulationData.sequence);
     }
@@ -80,7 +111,6 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
   onEntryClick(localStorageKey: string, sequence: string): void {
     const atomPositions = this.localStorageService.get(localStorageKey);
     if (atomPositions === null) return;
-
     this.source = {
       type: 'local' as const,
       format: 'mmcif' as const,
@@ -92,9 +122,13 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     this.currentResultEntry = this.results[localStorageKey];
   }
 
-  protected readonly Object = Object;
+  protected onSlideEnd(event: SliderSlideEndEvent) {
+    if (event.values) {
+      this.selectedResultsArray = this.resultsArray.slice(event.values[0] - 1, event.values[1]);
+    }
+  }
 
-  onDownloadClick() {
+  protected onDownloadClick() {
     const newBlob = new Blob([(this.source as any).data], {type: "text/plain"});
     const data = window.URL.createObjectURL(newBlob);
     const link = document.createElement("a");

@@ -7,6 +7,8 @@ export interface StoredSimulationData {
   fitness: number;
   sequence: string;
   sigma: number;
+  angles: [number, number][];
+  isLast: boolean;
 }
 
 export interface ResultEntries {
