@@ -1,17 +1,18 @@
 import {Component, computed, input, InputSignal, Signal} from '@angular/core';
 import {PlotlyModule} from 'angular-plotly.js';
 import * as PlotlyJS from 'plotly.js-dist-min';
-import {Data, Layout, Config, Shape} from 'plotly.js-dist-min';
+import {Data, Layout, Shape} from 'plotly.js-dist-min';
+import {StoredSimulationData} from '../../types/StoredSimulationData';
 
 PlotlyModule.plotlyjs = PlotlyJS;
 
 @Component({
   selector: 'app-ramachandran-plot',
   imports: [
-    PlotlyModule
+    PlotlyModule,
   ],
-  templateUrl: './ramachandran-plot.component.html',
-  styleUrl: './ramachandran-plot.component.css'
+  template: `
+    <plotly-plot [data]="data()" [layout]="layout"/>`,
 })
 export class RamachandranPlotComponent {
   private colorMap = ['white', 'red', 'brown', 'yellow']
@@ -55,6 +56,7 @@ export class RamachandranPlotComponent {
   ];
 
   protected layout: Partial<Layout> = {
+    autosize: false,
     xaxis: {
       range: [-180, 180],
       dtick: 60,
@@ -75,36 +77,33 @@ export class RamachandranPlotComponent {
         text: 'Ψ (psi)'
       }
     },
-    height: 550,
-    width: 550,
+    height: 600,
+    width: 650,
     modebar: {
       remove: ['select2d', 'lasso2d']
     },
     margin: {
       t: 40,
-      r: 40,
+      r: 10,
       b: 40,
       l: 40
     },
     shapes: this.makeFavorShapes()
   }
-  protected config: Partial<Config> = {
-  }
-  public angles: InputSignal<[number, number][]> = input.required();
+  public simulationData: InputSignal<StoredSimulationData[]> = input.required();
   public sequence: InputSignal<string> = input.required();
   protected data: Signal<Data[]> = computed(() => {
-    if (this.angles().length < 3) return [];
-    return [
-      {
-        x: this.angles().map(angle => angle[0]).slice(1, -1),
-        y: this.angles().map(angle => angle[1]).slice(1, -1),
+    return this.simulationData().map(d => {
+      return {
+        x: d.angles.map(angle => angle[0]).slice(1, -1),
+        y: d.angles.map(angle => angle[1]).slice(1, -1),
         hovertemplate: '<b>%{text}</b><br>ф: %{x:.2f}°<br>Ψ: %{y:.2f}°<extra></extra>',
-        text: this.sequence().split('').map((sequence, i) => `Pos ${i+1} (${sequence})`).slice(1, -1),
+        text: this.sequence().split('').map((sequence, i) => `Pos ${i + 1} (${sequence})`).slice(1, -1),
         type: 'scatter',
         mode: 'markers',
-        marker: { color: 'blue' }
+        name: `Gen. ${d.generation}`
       }
-    ];
+    });
   });
 
   private makeFavorShapes(): Partial<Shape>[] {

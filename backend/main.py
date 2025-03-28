@@ -51,7 +51,7 @@ async def simulate(websocket: WebSocket):
         esp = EvolutionStrategyParams(**params)
         es = EvolutionStrategy(esp)
 
-        async def send_data(generation: int, protein: Protein, sigma: float) -> None:
+        async def send_data(generation: int, protein: Protein, sigma: float, is_last: bool) -> None:
             data = {
                 "generation": generation,
                 "fitness": round(protein.fitness, 2),
@@ -59,11 +59,12 @@ async def simulate(websocket: WebSocket):
                 "sequence": sequence,
                 "sigma": round(sigma, 2),
                 "angles": [(angle[0], angle[1]) for angle in protein.angles],
+                "isLast": is_last,
             }
             await websocket.send_json(data)
 
-        def sync_callback(generation: int, protein: Protein, sigma: float):
-            future = asyncio.run_coroutine_threadsafe(send_data(generation, protein, sigma), loop)
+        def sync_callback(generation: int, protein: Protein, sigma: float, is_last: bool) -> None:
+            future = asyncio.run_coroutine_threadsafe(send_data(generation, protein, sigma, is_last), loop)
             future.result()
 
         loop = asyncio.get_running_loop()

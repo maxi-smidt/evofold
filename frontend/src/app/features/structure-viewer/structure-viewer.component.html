@@ -1,8 +1,8 @@
 <div class="flex h-full">
   <div class="flex flex-column bg-gray-200 w-2 p-1 gap-1 overflow-y-scroll">
     @for (key of obj.keys(results); track key) {
-      <div class="flex border border-1 border-round-lg align-items-center hover:bg-gray-300
-                  justify-content-center p-3 select-none cursor-pointer"
+      <div class="flex border border-1 border-round-lg align-items-center hover:bg-gray-300 justify-content-center p-3 select-none cursor-pointer"
+           [class.bg-green-300]="results[key].isLast"
            (click)="onEntryClick(key, results[key].sequence)">
         <div class="text-gray-500">Generation {{ results[key].generation }}</div>
       </div>
@@ -35,12 +35,31 @@
             </tr>
             <tr>
               <td class="text-lg text-gray-200">Sequence:</td>
-              <td class="text-lg text-gray-200 white-space-nowrap overflow-hidden text-overflow-ellipsis">{{ currentResultEntry.sequence }}</td>
+              <td
+                class="text-lg text-gray-200 white-space-nowrap overflow-hidden text-overflow-ellipsis">{{ currentResultEntry.sequence }}
+              </td>
             </tr>
           </table>
           <div class="flex flex-column gap-2">
-            <p-button class="ml-auto" [outlined]="true" icon="pi pi-download" (onClick)="onDownloadClick()" />
-            <p-button class="ml-auto" [outlined]="true" icon="pi pi-chart-scatter" (onClick)="isVisible = true" />
+            <p-button class="ml-auto"
+                      [outlined]="true"
+                      icon="pi pi-download"
+                      (onClick)="onDownloadClick()"
+                      pTooltip="Download cif file"
+                      showDelay="500"/>
+            <p-button class="ml-auto"
+                      [outlined]="true"
+                      icon="pi pi-chart-scatter"
+                      (onClick)="isRamachandranVisible = true"
+                      pTooltip="Show Ramachandran plot"
+                      showDelay="500"/>
+            <p-button class="ml-auto"
+                      [outlined]="true"
+                      [style.visibility]="receivedLast ? 'visible' : 'hidden'"
+                      icon="pi pi-list-check"
+                      (onClick)="isSummaryVisible = true"
+                      pTooltip="Show summary"
+                      showDelay="500"/>
           </div>
         </div>
       }
@@ -50,14 +69,38 @@
 
 @if (isLoading) {
   <div class="overlay">
-    <p-progress-spinner class="center-spinner" />
+    <p-progress-spinner class="center-spinner"/>
   </div>
 }
 
-<p-dialog header="Ramachandran Plot" [modal]="true" [(visible)]="isVisible">
+<p-dialog header="Ramachandran Plot" [modal]="true" [(visible)]="isRamachandranVisible">
   @if (currentResultEntry) {
-    <app-ramachandran-plot [angles]="currentResultEntry.angles" [sequence]="sequence"/>
+    <app-ramachandran-plot [simulationData]="[currentResultEntry]"
+                           [sequence]="sequence"/>
   } @else {
     Nothing to display yet, select a generation.
+  }
+</p-dialog>
+
+<p-dialog header="Summary" [modal]="true" [(visible)]="isSummaryVisible">
+  @if (isSummaryVisible) {
+    @if (obj.keys(results).length > 0) {
+      <div class="flex flex-column gap-2">
+        <div class="flex flex-row gap-3">
+          <app-fitness-plot [simulationData]="selectedResultsArray"/>
+          <app-ramachandran-plot [simulationData]="selectedResultsArray" [sequence]="sequence"/>
+        </div>
+        <div class="flex w-full align-items-center gap-3">
+          {{ generationRange[0] }}
+          <p-slider class="w-full"
+                    [(ngModel)]="generationRange"
+                    [range]="true"
+                    [min]="fixedGenerationRange[0]"
+                    [max]="fixedGenerationRange[1]"
+                    (onSlideEnd)="onSlideEnd($event)" />
+          {{ generationRange[1] }}
+        </div>
+      </div>
+    }
   }
 </p-dialog>
