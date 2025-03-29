@@ -14,7 +14,7 @@ from backend.structure.types import AngleList
 class Protein:
     ANGLE_MIN = -180
     ANGLE_MAX = 180
-    BASE_PATH = 'backend/structure' if os.environ['dev'] else 'structure'
+    BASE_PATH = 'backend/structure' if os.getenv('dev') else 'structure'
 
     def __init__(self, sequence: str, angles: Optional[AngleList] = None):
         self._sequence:    str             = sequence
