@@ -1,4 +1,3 @@
-import os
 from io import StringIO
 from itertools import count
 from random import randint
@@ -14,15 +13,15 @@ from backend.structure.types import AngleList
 class Protein:
     ANGLE_MIN = -180
     ANGLE_MAX = 180
-    BASE_PATH = 'backend/structure' if os.getenv('dev') else 'structure'
 
-    def __init__(self, sequence: str, angles: Optional[AngleList] = None):
-        self._sequence:    str             = sequence
-        self._amino_acids: List[AminoAcid] = []
-        self._atom_positions: List = []
-        self._fitness:     Optional[float] = None
-        self._cif_str:     Optional[str]   = None
-        self._angles:      AngleList       = angles or self._get_random_angles(sequence)  # ϕ and ψ angles alternating
+    def __init__(self, sequence: str, force_field: str, angles: Optional[AngleList] = None):
+        self._sequence:       str             = sequence
+        self._force_field:    str             = force_field
+        self._amino_acids:    List[AminoAcid] = []
+        self._atom_positions: List            = []
+        self._fitness:        Optional[float] = None
+        self._cif_str:        Optional[str]   = None
+        self._angles:         AngleList       = angles or self._get_random_angles(sequence)  # ϕ and ψ angles alternating
 
         assert not angles or len(angles) == len(sequence)
 
@@ -125,7 +124,7 @@ class Protein:
 
     def _compute_fitness(self) -> None:
         pdbx = PDBxFile(StringIO(self._cif_str))
-        force_field = ForceField(os.path.abspath(self.BASE_PATH + '/forcefield/amber_modified.xml'))
+        force_field = ForceField(self._force_field)
         system = force_field.createSystem(pdbx.topology, nonbondedMethod=NoCutoff)
         integrator = VerletIntegrator(0.001 * pico.factor)
         simulation = Simulation(pdbx.topology, system, integrator)

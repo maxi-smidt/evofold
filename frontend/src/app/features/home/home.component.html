@@ -42,10 +42,13 @@
             <span>{{ params.childrenSize }}</span>
           </div>
         </div>
+        <div class="flex justify-content-between">
+          <p-selectButton [options]="selectionOptions" [(ngModel)]="plusSelection"
+                          optionLabel="label" optionValue="value" />
 
-          <p-selectButton [options]="stateOptions" [(ngModel)]="plusSelection"
-                          optionLabel="label" optionValue="value">
-          </p-selectButton>
+          <p-selectButton [options]="forceFieldOptions" [(ngModel)]="params.forceField"
+                          optionLabel="label" optionValue="value" />
+        </div>
 
       </div>
 
