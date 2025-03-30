@@ -6,4 +6,5 @@ export interface EvolutionStrategyParams {
   theta: number;
   alpha: number;
   prematureTermination: null | number;
+  forceField: 'charmm' | 'amber';
 }

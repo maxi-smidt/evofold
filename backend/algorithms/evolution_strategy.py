@@ -18,11 +18,10 @@ class EvolutionStrategy:
         return nsmallest(self._params.population_size, children, fitness)
 
     def _create_initial_population(self, sequence) -> List[Protein]:
-        return [Protein(sequence) for _ in range(self._params.population_size)]
+        return [Protein(sequence, self._params.ff) for _ in range(self._params.population_size)]
 
-    @staticmethod
-    def _mutate_protein(protein: Protein, sigma: float) -> Protein:
-        return Protein(protein.sequence, EvolutionStrategy._gaussian_mutation(protein.angles, sigma))
+    def _mutate_protein(self, protein: Protein, sigma: float) -> Protein:
+        return Protein(protein.sequence, self._params.ff, self._gaussian_mutation(protein.angles, sigma))
 
     @staticmethod
     def _gaussian_mutation(angles: AngleList, sigma: float) -> AngleList:
