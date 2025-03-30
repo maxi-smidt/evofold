@@ -2,7 +2,7 @@ from io import StringIO
 from itertools import count
 from random import randint
 from openmm import VerletIntegrator
-from openmm.app import Simulation, ForceField, NoCutoff, PDBxFile
+from openmm.app import Simulation, NoCutoff, PDBxFile, ForceField
 from openmm.unit import pico, kilojoule_per_mole
 from typing import List, Optional
 
@@ -13,8 +13,12 @@ from backend.structure.types import AngleList
 class Protein:
     ANGLE_MIN = -180
     ANGLE_MAX = 180
+    FORCE_FIELDS = {
+        'amber': ForceField('amber14-all.xml'),
+        'charmm': ForceField('charmm36.xml'),
+    }
 
-    def __init__(self, sequence: str, force_field: str, angles: Optional[AngleList] = None):
+    def __init__(self, sequence: str, force_field: str='amber', angles: Optional[AngleList] = None):
         self._sequence:       str             = sequence
         self._force_field:    str             = force_field
         self._amino_acids:    List[AminoAcid] = []
@@ -124,7 +128,7 @@ class Protein:
 
     def _compute_fitness(self) -> None:
         pdbx = PDBxFile(StringIO(self._cif_str))
-        force_field = ForceField(self._force_field)
+        force_field = self.FORCE_FIELDS[self._force_field]
         system = force_field.createSystem(pdbx.topology, nonbondedMethod=NoCutoff)
         integrator = VerletIntegrator(0.001 * pico.factor)
         simulation = Simulation(pdbx.topology, system, integrator)

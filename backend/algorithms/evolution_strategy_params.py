@@ -15,7 +15,3 @@ class EvolutionStrategyParams:
 
     def __post_init__(self):
         assert self.population_size <= self.children_size
-
-    @property
-    def ff(self):
-        return { 'amber': 'amber14-all.xml', 'charmm': 'charmm36.xml' }[self.force_field]
