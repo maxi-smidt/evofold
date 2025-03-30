@@ -95,7 +95,7 @@ def perform_analysis(am: AnalyzeModel):
     if not phi_psi_angles:
         raise Exception("No chain found")
 
-    p = Protein(sequence, [(round(np.rad2deg(phi), 2) if phi else None, round(np.rad2deg(psi), 2) if psi else None, 180) for phi, psi in phi_psi_angles])
+    p = Protein(sequence, angles=[(round(np.rad2deg(phi), 2) if phi else None, round(np.rad2deg(psi), 2) if psi else None, 180) for phi, psi in phi_psi_angles])
 
     angles = [(float(phi) if isinstance(phi, np.float64) else phi,
                float(psi) if isinstance(psi, np.float64) else psi,

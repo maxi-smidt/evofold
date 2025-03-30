@@ -2,6 +2,7 @@ import numpy as np
 
 from heapq import nsmallest
 from typing import List, Callable
+from multiprocessing import get_context
 
 from backend.algorithms.evolution_strategy_params import EvolutionStrategyParams
 from backend.structure.protein import Protein, AngleList
@@ -18,10 +19,10 @@ class EvolutionStrategy:
         return nsmallest(self._params.population_size, children, fitness)
 
     def _create_initial_population(self, sequence) -> List[Protein]:
-        return [Protein(sequence, self._params.ff) for _ in range(self._params.population_size)]
+        return [Protein(sequence, self._params.force_field) for _ in range(self._params.population_size)]
 
     def _mutate_protein(self, protein: Protein, sigma: float) -> Protein:
-        return Protein(protein.sequence, self._params.ff, self._gaussian_mutation(protein.angles, sigma))
+        return Protein(protein.sequence, self._params.force_field, self._gaussian_mutation(protein.angles, sigma))
 
     @staticmethod
     def _gaussian_mutation(angles: AngleList, sigma: float) -> AngleList:
@@ -43,42 +44,42 @@ class EvolutionStrategy:
             return sigma / self._params.alpha
         return sigma * self._params.alpha
 
+    def _process_child(self, parent: Protein, sigma: float):
+        child = self._mutate_protein(parent, sigma)
+        return child, child.fitness < parent.fitness
+
     def run(self, sequence: str, callback: Callable[[int, Protein, float, bool], None] = None, callback_frequency: int = 1) -> Protein:
         generation: int = 0
-        s = 0.0
-        k = 2
+        s: float = 0.0
+        k: int = 2
         sigma: float = Protein.ANGLE_MAX * 0.1
         population: List[Protein] = self._create_initial_population(sequence)
         best_offspring = min(population, key=lambda p: p.fitness)
 
-        while generation < self._params.generations:
-            generation += 1
-            children: List[Protein] = population if self._params.plus_selection else []
+        with get_context("spawn").Pool() as pool:
+            while generation < self._params.generations:
+                generation += 1
+                children: List[Protein] = population if self._params.plus_selection else []
+                parents_to_mutate = [population[np.random.randint(self._params.population_size)] for _ in range(self._params.children_size)]
 
-            for _ in range(self._params.children_size):
-                parent = population[np.random.randint(self._params.population_size)]
-                child = self._mutate_protein(parent, sigma)
+                results = pool.starmap(self._process_child, [(parent, sigma) for parent in parents_to_mutate])
+                s += sum(success for _, success in results)
+                children.extend(child for child, _ in results)
 
-                if child.fitness < parent.fitness:
-                    s += 1
+                population = self._make_selection(children)
 
-                children.append(child)
+                if generation % k == 0:
+                    sigma = self._adaptive_adaption(sigma, s / (k * self._params.children_size))
+                    s = 0
 
-            population = self._make_selection(children)
+                best_offspring = min(population, key=lambda p: p.fitness)
 
-            if generation % k == 0:
-                sigma = self._adaptive_adaption(sigma, s / (k * self._params.children_size))
-                s = 0
+                is_premature_termination = self._is_premature_termination(best_offspring)
 
-            best_offspring = min(population, key=lambda p: p.fitness)
-
-            is_premature_termination = self._is_premature_termination(best_offspring)
-
-            if callback is not None and generation % callback_frequency == 0:
-                callback(generation, best_offspring, sigma, is_premature_termination or (generation >= self._params.generations))
-
-            if is_premature_termination:
-                return best_offspring
+                if callback is not None and generation % callback_frequency == 0:
+                    callback(generation, best_offspring, sigma, is_premature_termination or (generation >= self._params.generations))
+                if is_premature_termination:
+                    return best_offspring
 
         return best_offspring
 
