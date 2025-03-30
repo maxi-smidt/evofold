@@ -99,7 +99,7 @@ class AminoAcid:
             if atom_id not in ['N', 'CA', 'C']:
                 absolute_coord = np.dot(rotation, pos) + translation
                 transformed[atom_id] = tuple(absolute_coord.round(3))
-        if self.three_letter_code is not 'PRO':
+        if self.three_letter_code != 'PRO':
             transformed['H'] = self._build_specific_atom(prev_c, n_new, ca_new, rc.c_n_h_angle, rc.n_h)
         return transformed
 
