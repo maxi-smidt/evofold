@@ -17,7 +17,7 @@
     "@angular/platform-browser": "^19.2.3",
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
-    "@primeng/themes": "^19.0.9",
+    "@primeng/themes": "^19.0.10",
     "angular-plotly.js": "^6.0.0",
     "lz-string": "^1.5.0",
     "molstar": "^4.9.0",
