@@ -48,7 +48,7 @@ PyYAML==6.0.2
 rasterio==1.4.3
 requests==2.32.3
 rich==13.9.4
-rich-toolkit==0.12.0
+rich-toolkit==0.14.1
 rioxarray==0.18.1
 scipy==1.15.1
 setuptools==75.6.0
