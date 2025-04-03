@@ -50,10 +50,13 @@ class AminoAcid:
         atom_positions = rc.rigid_group_atom_positions[self._three_letter_code].copy()
 
         if self._predecessor:  # if it is not the first amino acid, the position and rotation has to be calculated
+            if 'H' in atom_positions: del atom_positions['H']
+            del atom_positions['H2']
+            del atom_positions['H3']
             atom_positions = self._transform_atom_positions(atom_positions)
 
         self.atoms = [Atom(atom_id, float(pos[0]), float(pos[1]), float(pos[2])) for atom_id, pos in atom_positions.items()]
-        
+
         if self._is_last:
             self._build_oxygens()
 
@@ -96,24 +99,29 @@ class AminoAcid:
             if atom_id not in ['N', 'CA', 'C']:
                 absolute_coord = np.dot(rotation, pos) + translation
                 transformed[atom_id] = tuple(absolute_coord.round(3))
+        if self.three_letter_code != 'PRO':
+            transformed['H'] = self._build_specific_atom(prev_c, n_new, ca_new, rc.c_n_h_angle, rc.n_h)
         return transformed
 
     @staticmethod
     def _build_o(amino_acid: "AminoAcid", prev_ca: np.array, prev_c: np.array, n_new: np.array, angle: float=rc.ca_c_o_angle, label: str='O') -> None:
+        o_position = AminoAcid._build_specific_atom(prev_ca, prev_c, n_new, angle, rc.c_o)
+        amino_acid.atoms.append(Atom(label, *o_position))
+
+    @staticmethod
+    def _build_specific_atom(a1: np.array, a2: np.array, a3: np.array, angle: float, distance: float) -> np.ndarray:
         angle = np.radians(angle)
 
-        vec_ca = prev_ca - prev_c
-        vec_n = n_new - prev_c
+        vec_a1 = a1 - a2
+        vec_a3 = a3 - a2
 
-        u = vec_ca / np.linalg.norm(vec_ca)
-        proj_n_on_u = np.dot(vec_n, u) * u
-        w = vec_n - proj_n_on_u
+        u = vec_a1 / np.linalg.norm(vec_a1)
+        proj_n_on_u = np.dot(vec_a3, u) * u
+        w = vec_a3 - proj_n_on_u
         w = -w / np.linalg.norm(w)
 
-        direction = rc.c_o * (np.cos(angle) * u + np.sin(angle) * w)
-        o_position = prev_c + direction
-
-        amino_acid.atoms.append(Atom(label, *o_position))
+        direction = distance * (np.cos(angle) * u + np.sin(angle) * w)
+        return a2 + direction
     
     def _build_oxygens(self) -> None:
         n_new = self._build_atom(self.n,  self.ca, self.c, bond_length=rc.n_c, bond_angle=rc.ca_c_n_angle, dihedral_angle=180)

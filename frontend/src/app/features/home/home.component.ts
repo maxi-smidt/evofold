@@ -37,7 +37,8 @@ export class HomeComponent {
   aminoAcids = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'];
   sequence: string = '';
   errorMessage: string | null = null;
-  stateOptions: any[] = [{label: '(µ+λ)-Selection', value: 'plus'}, {label: '(µ,λ)-Selection', value: 'comma'}];
+  selectionOptions: any[] = [{label: '(µ+λ)-Selection', value: 'plus'}, {label: '(µ,λ)-Selection', value: 'comma'}];
+  forceFieldOptions: any[] = [{label: 'AMBER', value: 'amber'}, {label: 'CHARMM', value: 'charmm'}];
 
   params: EvolutionStrategyParams = {
     generations: 500,
@@ -46,7 +47,8 @@ export class HomeComponent {
     plusSelection: true,
     theta: 0.2,
     alpha: 1.225,
-    prematureTermination: 10
+    prematureTermination: 10,
+    forceField: 'amber'
   }
 
   constructor(private router: Router,
