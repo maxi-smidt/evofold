@@ -83,7 +83,7 @@ class AminoAcid:
         prev_ca = np.array(self._predecessor.ca)
         prev_c  = np.array(self._predecessor.c)
 
-        n_new   = self._build_atom(prev_n,  prev_ca, prev_c, bond_length=rc.n_c, bond_angle=rc.ca_c_n_angle, dihedral_angle=-self._predecessor.psi)
+        n_new   = self._build_atom(prev_n, prev_ca, prev_c, bond_length=rc.c_n, bond_angle=rc.ca_c_n_angle, dihedral_angle=-self._predecessor.psi)
         ca_new  = self._build_atom(prev_ca, prev_c,  n_new,  bond_length=1.458,  bond_angle=rc.c_n_ca_angle, dihedral_angle=self.omega)
         c_new   = self._build_atom(prev_c,  n_new,   ca_new, bond_length=1.525,  bond_angle=rc.n_ca_c_angle, dihedral_angle=-self.phi)
 
@@ -124,7 +124,7 @@ class AminoAcid:
         return a2 + direction
     
     def _build_oxygens(self) -> None:
-        n_new = self._build_atom(self.n,  self.ca, self.c, bond_length=rc.n_c, bond_angle=rc.ca_c_n_angle, dihedral_angle=180)
+        n_new = self._build_atom(self.n, self.ca, self.c, bond_length=rc.c_n, bond_angle=rc.ca_c_n_angle, dihedral_angle=180)
         self._build_o(self, self.ca, self.c, n_new)
         self._build_o(self, self.ca, self.c, n_new, angle=-rc.ca_c_o_angle, label='OXT')
 
