@@ -49,12 +49,12 @@ class EvolutionStrategy:
         return child, child.fitness < parent.fitness
 
     def run(self, sequence: str, callback: Callable[[int, Protein, float, bool], None] = None, callback_frequency: int = 1) -> Protein:
-        generation: int = 0
-        s: float = 0.0
-        k: int = 2
-        sigma: float = Protein.ANGLE_MAX * 0.1
-        population: List[Protein] = self._create_initial_population(sequence)
-        best_offspring = min(population, key=lambda p: p.fitness)
+        generation:     int           = 0
+        s:              float         = 0.0
+        k:              int           = 2
+        sigma:          float         = self._params.sigma
+        population:     List[Protein] = self._create_initial_population(sequence)
+        best_offspring: Protein       = min(population, key=lambda p: p.fitness)
 
         with get_context("spawn").Pool() as pool:
             while generation < self._params.generations:

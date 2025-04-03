@@ -45,10 +45,11 @@ export class HomeComponent {
     populationSize: 100,
     childrenSize: 600,
     plusSelection: true,
+    forceField: 'amber',
+    sigma: 36,
     theta: 0.2,
     alpha: 1.225,
     prematureTermination: 10,
-    forceField: 'amber'
   }
 
   constructor(private router: Router,
