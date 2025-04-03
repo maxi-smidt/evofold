@@ -64,7 +64,7 @@ export class RamachandranPlotComponent {
       fixedrange: true,
       showline: true,
       title: {
-        text: 'ф (phi)'
+        text: 'ф (phi) [°]'
       }
     },
     yaxis: {
@@ -74,7 +74,7 @@ export class RamachandranPlotComponent {
       fixedrange: true,
       linecolor: 'black',
       title: {
-        text: 'Ψ (psi)'
+        text: 'Ψ (psi) [°]'
       }
     },
     height: 600,
