@@ -1,12 +1,12 @@
-ca_ca = 3.80209737096
-c_n   = 1.33092035825
-c_o   = 1.23373943765
-n_h   = 1.2
+ca_ca = 3.8025158462
+c_n   = 1.3311641073
+c_o   = 1.2335196908
+n_h   = 1.036 # https://doi.org/10.1016/S0301-0104(00)00253-6
 
-ca_c_n_angle = 116.2
-c_n_ca_angle = 123
-n_ca_c_angle = 110
-ca_c_o_angle = 120.5
+ca_c_n_angle = 116.8958501271
+c_n_ca_angle = 121.3224583490
+n_ca_c_angle = 111.1412240160
+ca_c_o_angle = 120.4442880180
 c_n_h_angle  = 123 # todo data analysis
 
 rigid_group_atom_positions = {
