@@ -15,7 +15,7 @@ from io import StringIO
 from pydantic import BaseModel
 from starlette.websockets import WebSocket
 
-from backend.algorithms.evolution_strategy import EvolutionStrategy
+from backend.algorithms.adaptive_es import AdaptiveES
 from backend.algorithms.evolution_strategy_params import EvolutionStrategyParams
 from backend.structure.protein import Protein
 
@@ -49,7 +49,7 @@ async def simulate(websocket: WebSocket):
         params = json.loads(re.sub(r'(?<!^)(?=[A-Z])', '_', json.dumps(message["params"])).lower())
 
         esp = EvolutionStrategyParams(**params)
-        es = EvolutionStrategy(esp)
+        es = AdaptiveES(esp)
 
         async def send_data(generation: int, protein: Protein, sigma: float, is_last: bool) -> None:
             data = {

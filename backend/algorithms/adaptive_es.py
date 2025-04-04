@@ -4,12 +4,13 @@ from heapq import nsmallest
 from typing import List, Callable
 from multiprocessing import get_context
 
-from backend.algorithms.evolution_strategy_params import EvolutionStrategyParams
+from backend.algorithms.es import ES
+from backend.algorithms.params.adaptive_es_params import AdaptiveESParams
 from backend.structure.protein import Protein, AngleList
 
 
-class EvolutionStrategy:
-    def __init__(self, params: EvolutionStrategyParams):
+class AdaptiveES(ES):
+    def __init__(self, params: AdaptiveESParams):
         self._params = params
         self._previous_best = None
         self._previous_best_count = 0
@@ -50,8 +51,7 @@ class EvolutionStrategy:
 
     def run(self, sequence: str, callback: Callable[[int, Protein, float, bool], None] = None, callback_frequency: int = 1) -> Protein:
         generation:     int           = 0
-        s:              float         = 0.0
-        k:              int           = 2
+        successes:      float         = 0.0
         sigma:          float         = self._params.sigma
         population:     List[Protein] = self._create_initial_population(sequence)
         best_offspring: Protein       = min(population, key=lambda p: p.fitness)
@@ -63,14 +63,14 @@ class EvolutionStrategy:
                 parents_to_mutate = [population[np.random.randint(self._params.population_size)] for _ in range(self._params.children_size)]
 
                 results = pool.starmap(self._process_child, [(parent, sigma) for parent in parents_to_mutate])
-                s += sum(success for _, success in results)
+                successes += sum(success for _, success in results)
                 children.extend(child for child, _ in results)
 
                 population = self._make_selection(children)
 
-                if generation % k == 0:
-                    sigma = self._adaptive_adaption(sigma, s / (k * self._params.children_size))
-                    s = 0
+                if generation % self._params.mod_frequency == 0:
+                    sigma = self._adaptive_adaption(sigma, successes / (self._params.mod_frequency * self._params.children_size))
+                    successes = 0
 
                 best_offspring = min(population, key=lambda p: p.fitness)
 
@@ -96,3 +96,7 @@ class EvolutionStrategy:
                 return True
         self._previous_best = best_offspring
         return False
+
+if __name__ == '__main__':
+    import cProfile
+    cProfile.run("EvolutionStrategy(EvolutionStrategyParams()).run('AAAA')")
