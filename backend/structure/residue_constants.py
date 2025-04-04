@@ -1,13 +1,13 @@
-ca_ca = 3.8025158462
-c_n   = 1.3311641073
-c_o   = 1.2335196908
-n_h   = 1.036 # https://doi.org/10.1016/S0301-0104(00)00253-6
+ca_ca = 3.8026289317
+c_n   = 1.3310356874
+c_o   = 1.2334761628
+n_h   = 1.1818357582
 
-ca_c_n_angle = 116.8958501271
-c_n_ca_angle = 121.3224583490
-n_ca_c_angle = 111.1412240160
-ca_c_o_angle = 120.4442880180
-c_n_h_angle  = 123 # todo data analysis
+ca_c_n_angle = 116.8860996049
+c_n_ca_angle = 121.3222574368
+n_ca_c_angle = 111.1274802149
+ca_c_o_angle = 120.4531056659
+c_n_h_angle  = 119.1180499506
 
 rigid_group_atom_positions = {
     'ALA': {
