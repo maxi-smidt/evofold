@@ -6,7 +6,7 @@ import {NgClass} from '@angular/common';
 import {MessageModule} from 'primeng/message';
 import {Router} from '@angular/router';
 import {SliderModule} from 'primeng/slider';
-import {AdaptiveEvolutionStrategyParams, EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
+import {AdaptiveEvolutionStrategyParams, DerandomizedEvolutionStrategyParams, EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
 import {SelectButtonModule} from 'primeng/selectbutton';
 import {InputNumberModule} from 'primeng/inputnumber';
 import {InputSwitchModule} from 'primeng/inputswitch';
@@ -39,10 +39,10 @@ export class HomeComponent {
   protected errorMessage: string | null = null;
   protected selectionOptions: any[] = [{label: '(µ+λ)-Selection', value: 'plus'}, {label: '(µ,λ)-Selection', value: 'comma'}];
   protected forceFieldOptions: any[] = [{label: 'AMBER', value: 'amber'}, {label: 'CHARMM', value: 'charmm'}];
-  protected esOptions: any[] = [{label: 'Adaptive ES', value: 'adaptive'}, {label: 'Self-adaptive ES', value: 'self-adaptive'}];
-  protected selectedESOption: 'adaptive' | 'self-adaptive' = 'adaptive';
+  protected esOptions: any[] = [{label: 'Adaptive ES', value: 'adaptive'}, {label: 'Self-adaptive ES', value: 'self-adaptive'}, {label: 'Derandomized ES', value: 'derandomized'}];
+  protected selectedESOption: 'adaptive' | 'self-adaptive' | 'derandomized' = 'adaptive';
 
-  protected params: AdaptiveEvolutionStrategyParams = {
+  protected params: EvolutionStrategyParams = {
     generations: 500,
     populationSize: 100,
     childrenSize: 600,
@@ -50,6 +50,14 @@ export class HomeComponent {
     forceField: 'amber',
     prematureTermination: 10,
     sigma: 36,
+  }
+
+  protected derandomizedParams: DerandomizedEvolutionStrategyParams = {
+    tau: 0,
+    alpha: 1 / 0,
+  }
+
+  protected adaptiveParams: AdaptiveEvolutionStrategyParams = {
     theta: 0.2,
     alpha: 1.225,
     modFrequency: 2
@@ -66,6 +74,10 @@ export class HomeComponent {
     inputElement.value = this.sequence;
 
     this.errorMessage = null;
+
+    const sqrtOfLength = Math.sqrt(this.sequence.length * 2);
+    this.derandomizedParams.alpha = 1 / sqrtOfLength;
+    this.derandomizedParams.tau = sqrtOfLength;
 
     if (this.sequence.length < 2) {
       this.errorMessage = "The sequence must be at least two amino acids."
@@ -114,11 +126,11 @@ export class HomeComponent {
       errors.push("The population size must be smaller than the children size.");
     }
 
-    if (this.params.alpha <= 1) {
+    if (this.selectedESOption === 'adaptive' && this.adaptiveParams.alpha <= 1) {
       errors.push("The modification factor alpha must be greater than 1.");
     }
 
-    if (this.params.modFrequency > this.params.generations) {
+    if (this.selectedESOption === 'adaptive' && this.adaptiveParams.modFrequency > this.params.generations) {
       errors.push("The modification frequency cannot exceed the number of generations.");
     }
 
@@ -129,18 +141,12 @@ export class HomeComponent {
     return errors.length === 0;
   }
 
-  private correctParams(): EvolutionStrategyParams | AdaptiveEvolutionStrategyParams {
-    if (this.selectedESOption === 'self-adaptive') {
-      return {
-        generations: this.params.generations,
-        populationSize: this.params.populationSize,
-        childrenSize: this.params.childrenSize,
-        plusSelection: this.params.plusSelection,
-        forceField: this.params.forceField,
-        sigma: this.params.sigma,
-        prematureTermination: this.params.prematureTermination,
-      };
+  private correctParams(): any {
+    switch (this.selectedESOption) {
+      case 'adaptive': return {...this.params, ...this.adaptiveParams};
+      case 'self-adaptive': return this.params;
+      case 'derandomized': return {...this.params, ...this.derandomizedParams};
+      default: throw new Error('Unknown option');
     }
-    return this.params;
   }
 }

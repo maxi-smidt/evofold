@@ -53,9 +53,8 @@
       <div class="flex flex-column gap-3">
         <div>
             <label for="sigma">Sigma
-              <i class="pi pi-info-circle"
-                 pTooltip="This is the initial sigma for the (self) adapting gaussian mutation."
-                 tooltipPosition="top"></i>
+              <i pTooltip="This is the initial sigma for the (self) adapting gaussian mutation."
+                 class="pi pi-info-circle" tooltipPosition="top"></i>
             </label>
             <div class="flex align-items-center gap-3">
               <p-slider id="sigma" [(ngModel)]="params.sigma" [step]="1" [min]="0" [max]="360" class="w-full" />
@@ -66,38 +65,49 @@
         @if (selectedESOption === 'adaptive') {
           <div>
             <label for="modFrequency">Modification frequency
-              <i class="pi pi-info-circle"
-                 pTooltip="This is the frequency of the adaption of sigma."
-                 tooltipPosition="top"></i>
+              <i pTooltip="This is the frequency of the adaption of sigma."
+                 class="pi pi-info-circle" tooltipPosition="top"></i>
             </label>
             <div class="flex align-items-center gap-3">
-              <p-slider id="modFrequency" [(ngModel)]="params.modFrequency" [step]="1" [min]="0" [max]="100" class="w-full" />
-              <span>{{ params.modFrequency }}</span>
+              <p-slider id="modFrequency" [(ngModel)]="adaptiveParams.modFrequency" [step]="1" [min]="0" [max]="100" class="w-full" />
+              <span>{{ adaptiveParams.modFrequency }}</span>
             </div>
           </div>
           <div>
             <label class="pr-2">Theta
-              <i class="pi pi-info-circle"
-                 pTooltip="The threshold for the succession rate in the adaptive adaption that determines how sigma is modified."
-                 tooltipPosition="top"></i>
+              <i pTooltip="The threshold for the succession rate in the adaptive adaption that determines how sigma is modified."
+                 class="pi pi-info-circle" tooltipPosition="top"></i>
             </label>
-            <p-inputNumber class="mt-1 w-full" [(ngModel)]="params.theta" [showButtons]="true" [step]="0.1" [min]="0"/>
+            <p-inputNumber class="mt-1 w-full" [(ngModel)]="adaptiveParams.theta" [showButtons]="true" [step]="0.1" [min]="0"/>
           </div>
           <div>
             <label class="pr-2">Alpha
-              <i class="pi pi-info-circle"
-                 pTooltip="The factor that is used to modify sigma in the adaptive adaption."
-                 tooltipPosition="top"></i>
+              <i pTooltip="The factor that is used to modify sigma in the adaptive adaption."
+                 class="pi pi-info-circle" tooltipPosition="top"></i>
             </label>
-            <p-inputNumber class="mt-1 w-full" [(ngModel)]="params.alpha" [showButtons]="true" [min]="1" [step]="0.025"/>
+            <p-inputNumber class="mt-1 w-full" [(ngModel)]="adaptiveParams.alpha" [showButtons]="true" [min]="1" [step]="0.025"/>
+          </div>
+        } @else if (selectedESOption === 'derandomized') {
+          <div>
+            <label class="pr-2">Alpha
+              <i pTooltip="Learning rate, how strongly the current change is incorporated into the direction vector of the optimization learned over all generations."
+                 class="pi pi-info-circle" tooltipPosition="top"></i>
+            </label>
+            <p-inputNumber class="mt-1 w-full" [(ngModel)]="derandomizedParams.alpha" [disabled]="true" [showButtons]="true" [step]="0.1" [min]="0"/>
+          </div>
+          <div>
+            <label class="pr-2">Tau
+              <i pTooltip="Damping factor that determines how much the length of the direction vector modifies the step size parameter."
+                 class="pi pi-info-circle" tooltipPosition="top"></i>
+            </label>
+            <p-inputNumber class="mt-1 w-full" [(ngModel)]="derandomizedParams.tau" [disabled]="true" [showButtons]="true" [min]="1" [step]="0.025"/>
           </div>
         }
 
         <div>
           <label>Premature Termination
-            <i class="pi pi-info-circle"
-               pTooltip="If the best fitness hasn't change for this amount of generations, the algorithm will terminate."
-               tooltipPosition="top"></i>
+            <i pTooltip="If the best fitness hasn't change for this amount of generations, the algorithm will terminate."
+               class="pi pi-info-circle" tooltipPosition="top"></i>
           </label>
           <div class="flex mt-1 align-items-center gap-2">
             <p-inputSwitch [(ngModel)]="prematureTermination"/>

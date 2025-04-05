@@ -8,8 +8,13 @@ export interface EvolutionStrategyParams {
   prematureTermination: null | number;
 }
 
-export interface AdaptiveEvolutionStrategyParams extends EvolutionStrategyParams {
+export interface AdaptiveEvolutionStrategyParams {
   theta: number;
   alpha: number;
   modFrequency: number;
+}
+
+export interface DerandomizedEvolutionStrategyParams {
+  alpha: number;
+  tau: number;
 }
