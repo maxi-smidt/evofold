@@ -16,7 +16,10 @@ from pydantic import BaseModel
 from starlette.websockets import WebSocket
 
 from backend.algorithms.adaptive_es import AdaptiveES
+from backend.algorithms.derandomized_es import DerandomizedES
+from backend.algorithms.es import ES
 from backend.algorithms.params.adaptive_es_params import AdaptiveESParams
+from backend.algorithms.params.derandomized_es_params import DerandomizedESParams
 from backend.algorithms.params.es_params import ESParams
 from backend.algorithms.self_adaptive_es import SelfAdaptiveES
 from backend.structure.protein import Protein
@@ -51,8 +54,8 @@ async def simulate(websocket: WebSocket):
         method = message["method"]
         params = json.loads(re.sub(r'(?<!^)(?=[A-Z])', '_', json.dumps(message["params"])).lower())
 
-        esp = AdaptiveESParams(**params) if method == "adaptive" else ESParams(**params)
-        es = AdaptiveES(esp) if method == "adaptive" else SelfAdaptiveES(esp)
+        esp = get_params_by_method(method, params)
+        es: ES = get_es_by_method(method, esp)
 
         async def send_data(generation: int, protein: Protein, sigma: float, is_last: bool) -> None:
             data = {
@@ -163,3 +166,21 @@ def add_chains(model, structures: List[Structure], ids: List[str]) -> None:
         for chain in structure.get_chains():
             chain.id = i
             model.add(chain)
+
+def get_es_by_method(method: str, esp) -> ES:
+    if method == "adaptive":
+        return AdaptiveES(esp)
+    if method == "self-adaptive":
+        return SelfAdaptiveES(esp)
+    if method == "derandomized":
+        return DerandomizedES(esp)
+    raise Exception("Unknown method")
+
+def get_params_by_method(method: str, params):
+    if method == "adaptive":
+        return AdaptiveESParams(**params)
+    if method == "self-adaptive":
+        return ESParams(**params)
+    if method == "derandomized":
+        return DerandomizedESParams(**params)
+    raise Exception("Unknown method")
