@@ -9,6 +9,7 @@ class ESParams:
     children_size:         int           = 600     # the amount of children produced by one population
     plus_selection:        bool          = True    # if true (µ+λ) else (µ,λ)
     force_field:           str           = 'amber' # the force field that is used for energy evaluation
+    sigma:                 int           = 36      # the initial sigma for gaussian mutation
     premature_termination: Optional[int] = 10      # if not none it terminates the algorithm if the best protein has not changed for n generations
 
     def __post_init__(self):

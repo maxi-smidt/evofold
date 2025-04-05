@@ -7,7 +7,7 @@ import {ReceivedSimulationData, ResultEntries, StoredSimulationData} from '../..
 import {LocalStorageService} from '../../services/local-storage.service';
 import {v4 as uuidv4} from 'uuid';
 import {Button} from 'primeng/button';
-import {EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
+import {AdaptiveEvolutionStrategyParams, EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
 import {ProgressSpinner} from 'primeng/progressspinner';
 import {RamachandranPlotComponent} from '../../shared/ramachandran-plot/ramachandran-plot.component';
 import {Dialog} from 'primeng/dialog';
@@ -68,7 +68,8 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.isLoading = true;
     const sequence: string = history.state.sequence;
-    const params: EvolutionStrategyParams = history.state.params;
+    const method: string = history.state.method;
+    const params: EvolutionStrategyParams | AdaptiveEvolutionStrategyParams = history.state.params;
     this.localStorageService.clearAll();
 
     this.subscription = this.simulationService.getMessages().subscribe({
@@ -80,7 +81,7 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
       complete: () => console.log('WebSocket connection closed')
     });
 
-    this.simulationService.sendMessage({params, sequence} as unknown as MessageEvent)
+    this.simulationService.sendMessage({params, sequence, method} as unknown as MessageEvent)
     this.sequence = sequence;
   }
 

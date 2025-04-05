@@ -1,8 +1,8 @@
 import numpy as np
 
-from heapq import nsmallest
 from typing import List, Callable
 from multiprocessing import get_context
+from overrides import overrides
 
 from backend.algorithms.es import ES
 from backend.algorithms.params.adaptive_es_params import AdaptiveESParams
@@ -11,16 +11,7 @@ from backend.structure.protein import Protein, AngleList
 
 class AdaptiveES(ES):
     def __init__(self, params: AdaptiveESParams):
-        self._params = params
-        self._previous_best = None
-        self._previous_best_count = 0
-
-    def _make_selection(self, children: List[Protein]) -> List[Protein]:
-        fitness: Callable[[Protein], float] = lambda p: p.fitness
-        return nsmallest(self._params.population_size, children, fitness)
-
-    def _create_initial_population(self, sequence) -> List[Protein]:
-        return [Protein(sequence, self._params.force_field) for _ in range(self._params.population_size)]
+        super().__init__(params)
 
     def _mutate_protein(self, protein: Protein, sigma: float) -> Protein:
         return Protein(protein.sequence, self._params.force_field, self._gaussian_mutation(protein.angles, sigma))
@@ -49,7 +40,8 @@ class AdaptiveES(ES):
         child = self._mutate_protein(parent, sigma)
         return child, child.fitness < parent.fitness
 
-    def run(self, sequence: str, callback: Callable[[int, Protein, float, bool], None] = None, callback_frequency: int = 1) -> Protein:
+    @overrides
+    def run(self, sequence: str, callback: Callable[[int, Protein, float, bool], None]=None, callback_frequency: int=1) -> Protein:
         generation:     int           = 0
         successes:      float         = 0.0
         sigma:          float         = self._params.sigma
@@ -82,21 +74,3 @@ class AdaptiveES(ES):
                     return best_offspring
 
         return best_offspring
-
-    def _is_premature_termination(self, best_offspring: Protein) -> bool:
-        return self._params.premature_termination is not None and self._reached_premature_termination(best_offspring)
-
-    def _reached_premature_termination(self, best_offspring: Protein) -> bool:
-        if self._previous_best is not None:
-            if best_offspring.fitness == self._previous_best.fitness:
-                self._previous_best_count += 1
-            else:
-                self._previous_best_count = 1
-            if self._previous_best_count == self._params.premature_termination:
-                return True
-        self._previous_best = best_offspring
-        return False
-
-if __name__ == '__main__':
-    import cProfile
-    cProfile.run("EvolutionStrategy(EvolutionStrategyParams()).run('AAAA')")
