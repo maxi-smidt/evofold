@@ -18,7 +18,7 @@ class Protein:
         'charmm': ForceField('charmm36.xml'),
     }
 
-    def __init__(self, sequence: str, force_field: str='amber', angles: Optional[AngleList] = None):
+    def __init__(self, sequence: str, force_field: str='amber', angles: Optional[AngleList]=None, sigma: Optional[float]=None):
         self._sequence:       str             = sequence
         self._force_field:    str             = force_field
         self._amino_acids:    List[AminoAcid] = []
@@ -26,6 +26,7 @@ class Protein:
         self._fitness:        Optional[float] = None
         self._cif_str:        Optional[str]   = None
         self._angles:         AngleList       = angles or self._get_random_angles(sequence)  # ϕ and ψ angles alternating
+        self._sigma:          Optional[float] = sigma # for self adaptive evolution strategy
 
         assert not angles or len(angles) == len(sequence)
 
@@ -60,6 +61,14 @@ class Protein:
     @property
     def atom_positions(self):
         return self._atom_positions
+
+    @property
+    def sigma(self) -> float:
+        return self._sigma
+
+    @sigma.setter
+    def sigma(self, value):
+        self._sigma = value
 
     def _compute_atom_positions(self):
         aa_nr = count(start=1)

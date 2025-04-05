@@ -5,7 +5,11 @@ export interface EvolutionStrategyParams {
   plusSelection: boolean;
   forceField: 'charmm' | 'amber';
   sigma: number;
+  prematureTermination: null | number;
+}
+
+export interface AdaptiveEvolutionStrategyParams extends EvolutionStrategyParams {
   theta: number;
   alpha: number;
-  prematureTermination: null | number;
+  modFrequency: number;
 }

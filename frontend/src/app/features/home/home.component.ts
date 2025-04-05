@@ -6,7 +6,7 @@ import {NgClass} from '@angular/common';
 import {MessageModule} from 'primeng/message';
 import {Router} from '@angular/router';
 import {SliderModule} from 'primeng/slider';
-import {EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
+import {AdaptiveEvolutionStrategyParams, EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
 import {SelectButtonModule} from 'primeng/selectbutton';
 import {InputNumberModule} from 'primeng/inputnumber';
 import {InputSwitchModule} from 'primeng/inputswitch';
@@ -34,22 +34,25 @@ import {ToastModule} from 'primeng/toast';
   providers: [MessageService]
 })
 export class HomeComponent {
-  aminoAcids = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'];
-  sequence: string = '';
-  errorMessage: string | null = null;
-  selectionOptions: any[] = [{label: '(µ+λ)-Selection', value: 'plus'}, {label: '(µ,λ)-Selection', value: 'comma'}];
-  forceFieldOptions: any[] = [{label: 'AMBER', value: 'amber'}, {label: 'CHARMM', value: 'charmm'}];
+  protected aminoAcids = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'];
+  protected sequence: string = '';
+  protected errorMessage: string | null = null;
+  protected selectionOptions: any[] = [{label: '(µ+λ)-Selection', value: 'plus'}, {label: '(µ,λ)-Selection', value: 'comma'}];
+  protected forceFieldOptions: any[] = [{label: 'AMBER', value: 'amber'}, {label: 'CHARMM', value: 'charmm'}];
+  protected esOptions: any[] = [{label: 'Adaptive ES', value: 'adaptive'}, {label: 'Self-adaptive ES', value: 'self-adaptive'}];
+  protected selectedESOption: 'adaptive' | 'self-adaptive' = 'adaptive';
 
-  params: EvolutionStrategyParams = {
+  protected params: AdaptiveEvolutionStrategyParams = {
     generations: 500,
     populationSize: 100,
     childrenSize: 600,
     plusSelection: true,
     forceField: 'amber',
+    prematureTermination: 10,
     sigma: 36,
     theta: 0.2,
     alpha: 1.225,
-    prematureTermination: 10,
+    modFrequency: 2
   }
 
   constructor(private router: Router,
@@ -57,8 +60,8 @@ export class HomeComponent {
   }
 
 
-  onInput($event: Event) {
-    const inputElement = $event.target as HTMLTextAreaElement;
+  onInput(event: Event) {
+    const inputElement = event.target as HTMLTextAreaElement;
     this.sequence = inputElement.value.toUpperCase();
     inputElement.value = this.sequence;
 
@@ -80,7 +83,8 @@ export class HomeComponent {
         {
           state: {
             sequence: this.sequence,
-            params: this.params
+            method: this.selectedESOption,
+            params: this.correctParams()
           }
         }
       ).then();
@@ -114,14 +118,29 @@ export class HomeComponent {
       errors.push("The modification factor alpha must be greater than 1.");
     }
 
-    if (errors.length > 0) {
-      for (const error of errors) {
-        this.messageService.add({severity: 'error', summary: 'Error', detail: error});
-      }
-
-      return false;
+    if (this.params.modFrequency > this.params.generations) {
+      errors.push("The modification frequency cannot exceed the number of generations.");
     }
 
-    return true;
+    for (const error of errors) {
+      this.messageService.add({severity: 'error', summary: 'Error', detail: error});
+    }
+
+    return errors.length === 0;
+  }
+
+  private correctParams(): EvolutionStrategyParams | AdaptiveEvolutionStrategyParams {
+    if (this.selectedESOption === 'self-adaptive') {
+      return {
+        generations: this.params.generations,
+        populationSize: this.params.populationSize,
+        childrenSize: this.params.childrenSize,
+        plusSelection: this.params.plusSelection,
+        forceField: this.params.forceField,
+        sigma: this.params.sigma,
+        prematureTermination: this.params.prematureTermination,
+      };
+    }
+    return this.params;
   }
 }
