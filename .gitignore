@@ -127,3 +127,4 @@ baseline.json
 .angular/
 
 poc/analysis/plt
+poc/analysis/cif_with_hydrogen
