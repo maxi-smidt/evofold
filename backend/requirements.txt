@@ -32,7 +32,7 @@ executing==2.2.0
 fastapi==0.115.11
 fastapi-cli==0.0.7
 fastjsonschema==2.21.1
-fonttools==4.56.0
+fonttools==4.57.0
 fqdn==1.5.1
 geopandas==1.0.1
 gprofiler-official==1.0.0
