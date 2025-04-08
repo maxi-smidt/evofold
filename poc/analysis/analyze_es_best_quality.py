@@ -6,6 +6,11 @@ from dataclasses import replace
 from functools import partial
 from typing import List, Tuple
 
+from openmm import VerletIntegrator
+from openmm.app import ForceField, PDBxFile, Simulation
+from openmm.app.forcefield import NoCutoff
+from openmm.unit import kilojoule_per_mole, pico
+
 from backend.algorithms.es import ES
 from backend.algorithms.params.es_params import ESParams
 from backend.algorithms.self_adaptive_es import SelfAdaptiveES
@@ -46,18 +51,25 @@ def get_fitness_and_rmsd(fn: str) -> Tuple[List[float], List[float]]:
     assert len(fitness) == len(rmsd)
     return fitness, rmsd
 
-def plot_plus_comma_over_rmsd(plus_file: str, comma_file: str, show_rmsd=False):
-    c_fitness, c_rmsd = get_fitness_and_rmsd(comma_file)
-    p_fitness, p_rmsd = get_fitness_and_rmsd(plus_file)
-    assert len(c_fitness) == len(p_fitness)
+def get_af_fitness(fn: str, ff: str):
+    ff = ForceField('amber14-all.xml') if 'amber' in ff else ForceField('charmm36.xml')
+    pdbx = PDBxFile(fn)
+    system = ff.createSystem(pdbx.topology, nonbondedMethod=NoCutoff)
+    integrator = VerletIntegrator(0.001 * pico.factor)
+    simulation = Simulation(pdbx.topology, system, integrator)
+    simulation.context.setPositions(pdbx.positions)
+    state = simulation.context.getState(getEnergy=True)
+    return state.getPotentialEnergy().value_in_unit(kilojoule_per_mole)
 
-    generations = range(len(c_fitness))
+
+def plot_plus_comma_over_rmsd(file: str, title: str, show_rmsd=False, show_af_fitness=False):
+    fitness, rmsd = get_fitness_and_rmsd(file)
+
+    generations = range(len(fitness))
 
     fig, ax1 = plt.subplots(figsize=(10, 6))
 
-    # Remove symbols on the data points, just plot lines
-    ax1.plot(generations, c_fitness, 'b-', label='Fitness (µ,λ)')  # 'b-' for blue solid line
-    ax1.plot(generations, p_fitness, 'c-', label='Fitness (µ+λ)')  # 'c-' for cyan solid line
+    ax1.plot(generations, fitness, 'b-')
     ax1.set_xlabel('Generation')
     ax1.set_ylabel('Fitness [kJ/mol]')
     ax1.tick_params(axis='y')
@@ -66,9 +78,7 @@ def plot_plus_comma_over_rmsd(plus_file: str, comma_file: str, show_rmsd=False):
 
     if show_rmsd:
         ax2 = ax1.twinx()
-        # RMSD lines with dashed style (remove symbols)
-        ax2.plot(generations, c_rmsd, 'r--', label='RMSD (µ,λ)')  # 'r--' for red dashed line
-        ax2.plot(generations, p_rmsd, 'm--', label='RMSD (µ+λ)')  # 'm--' for magenta dashed line
+        ax2.plot(generations, rmsd, 'r--')
         ax2.set_ylabel('RMSD to AlphaFold')
         ax2.tick_params(axis='y')
         lines_2, labels_2 = ax2.get_legend_handles_labels()
@@ -76,8 +86,13 @@ def plot_plus_comma_over_rmsd(plus_file: str, comma_file: str, show_rmsd=False):
     else:
         ax1.legend(lines_1, labels_1, loc='upper right')
 
+    if show_af_fitness:
+        f = get_af_fitness('best_qual/fold_peptide_v2_model_0_h.cif', file)
+        plt.text(0.95, 0.95, f'AF fitness: {f:.2f} [kJ/mol]', ha='right', va='top', transform=plt.gca().transAxes,
+                 fontsize=12, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.5'))
 
-    plt.title('Evolution of Best Fitness and RMSD Across Generations')
+
+    plt.title(title)
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -98,14 +113,14 @@ def main():
         # (replace(base_params, plus_selection=False, force_field='amber'), 'comma-amber'),
         # (replace(base_params, plus_selection=True, force_field='amber'), 'plus-amber'),
         # (replace(base_params, plus_selection=False, force_field='charmm'), 'comma-charmm'),
-        (replace(base_params, plus_selection=True, force_field='charmm'), 'plus-charmm'),
+        # (replace(base_params, plus_selection=True, force_field='charmm'), 'plus-charmm'),
     ]
 
     measure_and_save(params, sequence)
 
-    # plot_plus_comma_over_rmsd('plus-amber', 'comma-amber', True)
-    # plot_plus_comma_over_rmsd('plus-amber', 'comma-amber', False)
-    # plot_plus_comma_over_rmsd('plus-charmm', 'comma-charmm', True)
+    plot_plus_comma_over_rmsd('plus-amber', 'AMBER - (µ+λ)', True, True)
+    plot_plus_comma_over_rmsd('comma-amber', 'AMBER - (µ,λ)', True, True)
+    plot_plus_comma_over_rmsd('comma-charmm', 'CHARMM - (µ,λ)', True, True)
     # plot_plus_comma_over_rmsd('plus-charmm', 'comma-charmm', False)
 
 

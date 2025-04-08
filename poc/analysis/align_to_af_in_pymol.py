@@ -27,5 +27,5 @@ def align_with_af(files: List[str], af_file: str):
                 print(rmsd, end=', ')
             print("\n=======")
 
-# ['comma-amber', 'plus-amber', 'comma-charmm']
-align_with_af(['plus-charmm'], 'best_qual/fold_peptide_v2_model_0')
+# ['comma-amber', 'plus-amber', 'comma-charmm', 'plus-charmm']
+align_with_af(['plus-amber'], 'best_qual/fold_peptide_v2_model_0')
