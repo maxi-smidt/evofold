@@ -1,4 +1,5 @@
 import math
+
 import numpy as np
 
 from typing import List, Callable
@@ -15,7 +16,7 @@ class DerandomizedES(ES):
         super().__init__(params)
 
     def _mutate_protein(self, protein: Protein, sigma: float) -> Protein:
-        return Protein(protein.sequence, self._params.force_field, self._gaussian_mutation(protein.angles, sigma))
+        return Protein(protein.sequence, self._params.force_field, angles=self._gaussian_mutation(protein.angles, sigma))
 
     @staticmethod
     def _gaussian_mutation(angles: AngleList, sigma: float) -> AngleList:
@@ -31,33 +32,28 @@ class DerandomizedES(ES):
         return mutated_angles
 
     @staticmethod
-    def _average_angles(angle_lists: List[AngleList]) -> AngleList:
-        summed_angles = [[a[0], a[1], a[2]] for a in angle_lists[0]]
-        for angle_list in angle_lists[1:]:
-            for new_angles, angles in zip(angle_list, summed_angles):
-                angles[0] += new_angles[0]
-                angles[1] += new_angles[1]
-                angles[2] += new_angles[2]
+    def _average_angles(angle_lists: List[List[float]]) -> List[float]:
+        summed_angles = [0 for _ in range(len(angle_lists[0]))]
+        for angel_list in angle_lists:
+            for i, angle in enumerate(angel_list):
+                summed_angles[i] += angle
 
-        return [
-            (angle[0] / len(angle_lists), angle[1] / len(angle_lists), angle[2] / len(angle_lists))
-            for angle in summed_angles
-        ]
+        return [angle / len(summed_angles) for angle in summed_angles]
 
     def _global_arithmetic_crossover(self, population: List[Protein]) -> Protein:
-        return Protein(population[0].sequence, self._params.force_field, self._average_angles([a.angles for a in population]))
+        return Protein(population[0].sequence, self._params.force_field, flat_angles=self._average_angles([a.angles_flat for a in population]))
 
     @staticmethod
-    def _apply_to_each_angle(angle_list: AngleList, operation: Callable[[float], float]) -> AngleList:
-        return [(operation(angles[0]), operation(angles[1]), operation(angles[2])) for angles in angle_list]
+    def _apply_to_each_angle(angle_list: List[float], operation: Callable[[float], float]) -> List[float]:
+        return [operation(angle) for angle in angle_list]
 
     @staticmethod
-    def _add_angle_lists(angle_list1: AngleList, angle_list2: AngleList) -> AngleList:
-        return [(a1[0]+a2[0], a1[1]+a2[1], a1[2]+a2[2]) for a1, a2 in zip(angle_list1, angle_list2)]
+    def _add_angle_lists(angle_list1: List[float], angle_list2: List[float]) -> List[float]:
+        return [a1+a2 for a1, a2 in zip(angle_list1, angle_list2)]
 
     @staticmethod
-    def _distance_of_angle_list(angle_list: AngleList) -> float:
-        return math.sqrt(sum(angles[0] ** 2 + angles[1] ** 2 for angles in angle_list)) # leave omega
+    def _distance_of_angle_list(angle_list: List[float]) -> float:
+        return math.sqrt(sum(angle ** 2 for angle in angle_list)) # leave omega
 
     @overrides
     def run(self, sequence: str, callback: Callable[[int, Protein, float, bool], None]=None, callback_frequency: int=1) -> Protein:
@@ -65,7 +61,8 @@ class DerandomizedES(ES):
         sigma:          float         = self._params.sigma
         population:     List[Protein] = self._create_initial_population(sequence)
         best_offspring: Protein       = min(population, key=lambda p: p.fitness)
-        direction_vec:  List          = [(0, 0, 0) for _ in range(len(sequence))] # s
+        genome_length:  int = len(sequence) * 3
+        direction_vec:  List[float]   = [0 for _ in range(genome_length)]
 
         with get_context("spawn").Pool() as pool:
             while generation < self._params.generations:
@@ -78,10 +75,10 @@ class DerandomizedES(ES):
 
                 population = self._make_selection(children)
 
-                mutation_directions: List[AngleList] = [
+                mutation_directions: List[List[float]] = [
                     [
-                        (pa[0] - gca[0], pa[1] - gca[1], pa[2] - gca[2]) for pa, gca in
-                        zip(protein.angles, global_crossover.angles)
+                        pa - gca for pa, gca in
+                        zip(protein.angles_flat, global_crossover.angles_flat)
                     ]
                     for protein in population
                 ]
@@ -90,12 +87,11 @@ class DerandomizedES(ES):
 
                 direction_factor = 1 - self._params.alpha
                 avg_mutation_direction_factor = math.sqrt(self._params.alpha * (2 - self._params.alpha) * self._params.population_size)
-                direction_vec: AngleList = self._add_angle_lists(
+                direction_vec: List[float] = self._add_angle_lists(
                     self._apply_to_each_angle(direction_vec, lambda a: a * direction_factor),
                     self._apply_to_each_angle(avg_mutation_direction, lambda a: a * avg_mutation_direction_factor)
                 )
 
-                genome_length = len(sequence) * 2 # phi und psi for each aa
                 sigma = sigma * math.exp((self._distance_of_angle_list(direction_vec) ** 2 - genome_length) / (2 * self._params.tau * genome_length))
                 best_offspring = min(population, key=lambda p: p.fitness)
 

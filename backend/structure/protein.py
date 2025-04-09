@@ -18,17 +18,23 @@ class Protein:
         'charmm': ForceField('charmm36.xml'),
     }
 
-    def __init__(self, sequence: str, force_field: str='amber', angles: Optional[AngleList]=None, sigma: Optional[float]=None):
+    def __init__(self, sequence: str, force_field: str='amber', *, angles: Optional[AngleList]=None, sigma: Optional[float]=None, flat_angles: Optional[List[float]]=None):
         self._sequence:       str             = sequence
         self._force_field:    str             = force_field
         self._amino_acids:    List[AminoAcid] = []
         self._atom_positions: List            = []
         self._fitness:        Optional[float] = None
         self._cif_str:        Optional[str]   = None
-        self._angles:         AngleList       = angles or self._get_random_angles(sequence)  # ϕ and ψ angles alternating
         self._sigma:          Optional[float] = sigma # for self adaptive evolution strategy
 
         assert not angles or len(angles) == len(sequence)
+
+        if angles is not None:
+            self._angles = angles
+        if flat_angles is not None:
+            self._angles = [(flat_angles[i], flat_angles[i+1], flat_angles[i+2]) for i in range(0, len(flat_angles), 3)]
+        if angles is None and flat_angles is None:
+            self._angles = self._get_random_angles(sequence)
 
         self._compute_structure()
         self._compute_atom_positions()
@@ -49,6 +55,10 @@ class Protein:
     @property
     def angles(self) -> AngleList:
         return self._angles
+
+    @property
+    def angles_flat(self) -> List[float]:
+        return [angle for angles in self.angles for angle in angles]
 
     @property
     def fitness(self) -> float:
