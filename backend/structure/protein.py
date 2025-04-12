@@ -1,3 +1,5 @@
+import numpy as np
+
 from io import StringIO
 from itertools import count
 from random import randint
@@ -18,7 +20,7 @@ class Protein:
         'charmm': ForceField('charmm36.xml'),
     }
 
-    def __init__(self, sequence: str, force_field: str='amber', *, angles: Optional[AngleList]=None, sigma: Optional[float]=None, flat_angles: Optional[List[float]]=None):
+    def __init__(self, sequence: str, force_field: str='amber', *, angles: Optional[AngleList]=None, sigma: Optional[float]=None, flat_angles: Optional[np.array]=None):
         self._sequence:       str             = sequence
         self._force_field:    str             = force_field
         self._amino_acids:    List[AminoAcid] = []
@@ -32,7 +34,7 @@ class Protein:
         if angles is not None:
             self._angles = angles
         if flat_angles is not None:
-            self._angles = [(flat_angles[i], flat_angles[i+1], flat_angles[i+2]) for i in range(0, len(flat_angles), 3)]
+            self._angles = [(flat_angles[i], flat_angles[i+1], 180) for i in range(0, len(flat_angles), 2)]
         if angles is None and flat_angles is None:
             self._angles = self._get_random_angles(sequence)
 
@@ -57,8 +59,8 @@ class Protein:
         return self._angles
 
     @property
-    def angles_flat(self) -> List[float]:
-        return [angle for angles in self.angles for angle in angles]
+    def angles_flat(self) -> np.array:
+        return np.array([angle for angles in self.angles for angle in angles[:2]])
 
     @property
     def fitness(self) -> float:
