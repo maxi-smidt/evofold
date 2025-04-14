@@ -16,7 +16,8 @@ class SelfAdaptiveES(ES):
         super().__init__(params)
 
     def _mutate_protein(self, protein: Protein) -> Protein:
-        return Protein(protein.sequence, self._params.force_field, *self._self_adaptive_gaussian_mutation(protein))
+        angles, sigma = self._self_adaptive_gaussian_mutation(protein)
+        return Protein(protein.sequence, self._params.force_field, angles=angles, sigma=sigma)
 
     @staticmethod
     def _self_adaptive_gaussian_mutation(protein: Protein) -> Tuple[AngleList, float]:
