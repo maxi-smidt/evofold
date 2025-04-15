@@ -5,7 +5,10 @@ export interface EvolutionStrategyParams {
   plusSelection: boolean;
   forceField: 'charmm' | 'amber';
   sigma: number;
-  prematureTermination: null | number;
+  prematureStrategy: 'none' | 'terminate' | 'restart';
+  prematureStagnation: null | number;
+  prematureSigma: null | number;
+  prematureFitness: null | number;
 }
 
 export interface AdaptiveEvolutionStrategyParams {

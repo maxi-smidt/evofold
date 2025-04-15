@@ -40,13 +40,14 @@ class DerandomizedES(ES):
                 children.extend(results)
 
                 if self._finalize_generation(children, callback, sigma):
-                    return self._global_best_offspring
-
-                z_mean = sum((p.angles_flat - mean) / sigma  for p in self._population) / len(self._population)
-
-                s = (1 - self._params.alpha) * s + np.sqrt(self._params.alpha * (2 - self._params.alpha) * self._params.population_size) * z_mean
-
-                sigma = sigma * np.exp((np.linalg.norm(s) ** 2 - genome_length) / (2 * self._params.tau * genome_length))
-
+                    if self._params.premature_strategy == 'terminate': return self._global_best_offspring
+                    if self._params.premature_strategy == 'restart':
+                        sigma = self._params.sigma
+                        s = np.zeros(genome_length)
+                        self._population = self._create_initial_population(sequence)
+                else:
+                    z_mean = sum((p.angles_flat - mean) / sigma  for p in self._population) / len(self._population)
+                    s = (1 - self._params.alpha) * s + np.sqrt(self._params.alpha * (2 - self._params.alpha) * self._params.population_size) * z_mean
+                    sigma = sigma * np.exp((np.linalg.norm(s) ** 2 - genome_length) / (2 * self._params.tau * genome_length))
 
         return self._global_best_offspring

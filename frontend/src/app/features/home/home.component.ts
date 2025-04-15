@@ -13,6 +13,7 @@ import {InputSwitchModule} from 'primeng/inputswitch';
 import {TooltipModule} from 'primeng/tooltip';
 import {MessageService} from 'primeng/api';
 import {ToastModule} from 'primeng/toast';
+import {Tab, TabList, TabPanel, TabPanels, Tabs} from 'primeng/tabs';
 
 @Component({
   selector: 'app-home',
@@ -28,6 +29,11 @@ import {ToastModule} from 'primeng/toast';
     InputSwitchModule,
     TooltipModule,
     ToastModule,
+    Tabs,
+    TabList,
+    Tab,
+    TabPanels,
+    TabPanel,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
@@ -41,6 +47,8 @@ export class HomeComponent {
   protected forceFieldOptions: any[] = [{label: 'AMBER', value: 'amber'}, {label: 'CHARMM', value: 'charmm'}];
   protected esOptions: any[] = [{label: 'Adaptive ES', value: 'adaptive'}, {label: 'Self-adaptive ES', value: 'self-adaptive'}, {label: 'Derandomized ES', value: 'derandomized'}];
   protected selectedESOption: 'adaptive' | 'self-adaptive' | 'derandomized' = 'adaptive';
+  protected pcOptions: any[] = [{label: 'None', value: 'none'}, {label: 'Termination', value: 'terminate'}, {label: 'Restart', value: 'restart'}];
+  protected selectedPCOption: 'none' | 'terminate' | 'restart' = 'none';
 
   protected params: EvolutionStrategyParams = {
     generations: 500,
@@ -48,7 +56,10 @@ export class HomeComponent {
     childrenSize: 600,
     plusSelection: true,
     forceField: 'amber',
-    prematureTermination: 10,
+    prematureStrategy: 'none',
+    prematureStagnation: 15,
+    prematureSigma: 0.01,
+    prematureFitness: null,
     sigma: 36,
   }
 
@@ -111,12 +122,28 @@ export class HomeComponent {
     this.params.plusSelection = value === 'plus';
   }
 
-  get prematureTermination(): boolean {
-    return this.params.prematureTermination !== null;
+  get prematureStagnation(): boolean {
+    return this.params.prematureStagnation !== null;
   }
 
-  set prematureTermination(value: boolean) {
-    this.params.prematureTermination = value ? 2 : null;
+  set prematureStagnation(value: boolean) {
+    this.params.prematureStagnation = value ? 15 : null;
+  }
+
+  get prematureSigma(): boolean {
+    return this.params.prematureSigma !== null;
+  }
+
+  set prematureSigma(value: boolean) {
+    this.params.prematureSigma = value ? 0.01 : null;
+  }
+
+  get prematureFitness(): boolean {
+    return this.params.prematureFitness !== null;
+  }
+
+  set prematureFitness(value: boolean) {
+    this.params.prematureFitness = value ? 2000 : null;
   }
 
   private validateParams(): boolean {
