@@ -50,6 +50,10 @@ class SelfAdaptiveES(ES):
                 children.extend(results)
 
                 if self._finalize_generation(children, callback, None):
-                    return self._global_best_offspring
+                    if self._params.premature_strategy == 'terminate': return self._global_best_offspring
+                    if self._params.premature_strategy == 'restart':
+                        self._population = self._create_initial_population(sequence)
+                        for protein in self._population:
+                            protein.sigma = self._params.sigma
 
         return self._global_best_offspring

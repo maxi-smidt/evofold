@@ -5,3 +5,7 @@ textarea {
 label {
   user-select: none;
 }
+
+:host {
+  --p-tabs-tablist-background: var(--p-gray-100);
+}

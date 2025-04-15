@@ -30,14 +30,16 @@ class ES(ABC):
         self._local_best_offspring = min(self._population, key=lambda p: p.fitness)
         self._global_best_offspring = min(self._local_best_offspring, self._global_best_offspring, key=lambda p: p.fitness)
 
-        is_premature_termination = self._is_premature_termination(self._local_best_offspring)
-
         sigma = sigma or self._global_best_offspring.sigma
+
+        start_strategy = self._has_reached_stagnation() or self._has_reached_sigma(sigma) or self._has_reached_fitness()
+        will_terminate = start_strategy and self._params.premature_strategy == 'terminate'
+
         if callback is not None and self._generation % self._callback_frequency == 0:
             callback(self._generation, self._local_best_offspring, sigma,
-                     is_premature_termination or (self._generation >= self._params.generations))
+                     will_terminate or (self._generation >= self._params.generations))
 
-        return is_premature_termination
+        return start_strategy and self._params.premature_strategy != 'none'
 
     def _make_selection(self, children: List[Protein]) -> List[Protein]:
         fitness: Callable[[Protein], float] = lambda p: p.fitness
@@ -46,16 +48,22 @@ class ES(ABC):
     def _create_initial_population(self, sequence) -> List[Protein]:
         return [Protein(sequence, self._params.force_field) for _ in range(self._params.population_size)]
 
-    def _is_premature_termination(self, best_offspring: Protein) -> bool:
-        return self._params.premature_termination is not None and self._reached_premature_termination(best_offspring)
+    def _has_reached_stagnation(self) -> bool:
+        return self._params.premature_stagnation is not None and self._reached_stagnation_inner()
 
-    def _reached_premature_termination(self, best_offspring: Protein) -> bool:
+    def _reached_stagnation_inner(self) -> bool:
         if self._previous_best is not None:
-            if best_offspring.fitness == self._previous_best.fitness:
+            if abs(self._local_best_offspring.fitness - self._previous_best.fitness) < 0.0001:
                 self._previous_best_count += 1
             else:
                 self._previous_best_count = 1
-            if self._previous_best_count == self._params.premature_termination:
+            if self._previous_best_count == self._params.premature_stagnation:
                 return True
-        self._previous_best = best_offspring
+        self._previous_best = self._local_best_offspring
         return False
+
+    def _has_reached_sigma(self, sigma: float) -> bool:
+        return self._params.premature_sigma is not None and sigma <= self._params.premature_sigma
+
+    def _has_reached_fitness(self) -> bool:
+        return self._params.premature_fitness is not None and self._local_best_offspring.fitness <= self._params.premature_sigma

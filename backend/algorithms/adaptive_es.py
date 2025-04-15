@@ -57,9 +57,12 @@ class AdaptiveES(ES):
                 children.extend(child for child, _ in results)
 
                 if self._finalize_generation(children, callback, sigma):
-                    return self._global_best_offspring
-
-                if self._generation % self._params.mod_frequency == 0:
+                    if self._params.premature_strategy == 'terminate': return self._global_best_offspring
+                    if self._params.premature_strategy == 'restart':
+                        sigma = self._params.sigma
+                        successes = 0
+                        self._population = self._create_initial_population(sequence)
+                elif self._generation % self._params.mod_frequency == 0:
                     sigma = self._adaptive_adaption(sigma, successes / (self._params.mod_frequency * self._params.children_size))
                     successes = 0
 
