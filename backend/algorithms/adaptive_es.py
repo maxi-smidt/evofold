@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import List, Callable
+from typing import List
 from multiprocessing import get_context
 from overrides import overrides
 
@@ -41,36 +41,26 @@ class AdaptiveES(ES):
         return child, child.fitness < parent.fitness
 
     @overrides
-    def run(self, sequence: str, callback: Callable[[int, Protein, float, bool], None]=None, callback_frequency: int=1) -> Protein:
-        generation:     int           = 0
-        successes:      float         = 0.0
-        sigma:          float         = self._params.sigma
-        population:     List[Protein] = self._create_initial_population(sequence)
-        best_offspring: Protein       = min(population, key=lambda p: p.fitness)
+    def run(self, sequence: str, callback: ES.Callback=None, callback_frequency: int=1) -> Protein:
+        self._initialize_run(sequence, callback_frequency)
+        successes: float = 0.0
+        sigma:     float = self._params.sigma
 
         with get_context("spawn").Pool() as pool:
-            while generation < self._params.generations:
-                generation += 1
-                children: List[Protein] = population if self._params.plus_selection else []
-                parents_to_mutate = [population[np.random.randint(self._params.population_size)] for _ in range(self._params.children_size)]
+            while self._generation < self._params.generations:
+                self._generation += 1
+                children: List[Protein] = self._population if self._params.plus_selection else []
+                parents_to_mutate = [self._population[np.random.randint(self._params.population_size)] for _ in range(self._params.children_size)]
 
                 results = pool.starmap(self._process_child, [(parent, sigma) for parent in parents_to_mutate])
                 successes += sum(success for _, success in results)
                 children.extend(child for child, _ in results)
 
-                population = self._make_selection(children)
+                if self._finalize_generation(children, callback, sigma):
+                    return self._global_best_offspring
 
-                if generation % self._params.mod_frequency == 0:
+                if self._generation % self._params.mod_frequency == 0:
                     sigma = self._adaptive_adaption(sigma, successes / (self._params.mod_frequency * self._params.children_size))
                     successes = 0
 
-                best_offspring = min(population, key=lambda p: p.fitness)
-
-                is_premature_termination = self._is_premature_termination(best_offspring)
-
-                if callback is not None and generation % callback_frequency == 0:
-                    callback(generation, best_offspring, sigma, is_premature_termination or (generation >= self._params.generations))
-                if is_premature_termination:
-                    return best_offspring
-
-        return best_offspring
+        return self._global_best_offspring
