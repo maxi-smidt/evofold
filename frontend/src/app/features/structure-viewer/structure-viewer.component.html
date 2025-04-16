@@ -2,8 +2,7 @@
   <div class="flex flex-column bg-gray-200 w-2 p-1 gap-1 overflow-y-scroll">
     @for (key of obj.keys(results); track key) {
       <div class="flex border border-1 border-round-lg align-items-center hover:bg-gray-300 justify-content-center p-3 select-none cursor-pointer"
-           [class.bg-green-300]="results[key].isLast"
-           (click)="onEntryClick(key, results[key].sequence)">
+           [class.bg-green-300]="results[key].isLast" (click)="onEntryClick(key, results[key].sequence)">
         <div class="text-gray-500">Generation {{ results[key].generation }}</div>
       </div>
     }
@@ -44,7 +43,7 @@
             <p-button class="ml-auto"
                       [outlined]="true"
                       icon="pi pi-download"
-                      (onClick)="onDownloadClick()"
+                      (onClick)="onDownloadCifClick()"
                       pTooltip="Download cif file"
                       showDelay="500"/>
             <p-button class="ml-auto"
@@ -97,8 +96,15 @@
                     [range]="true"
                     [min]="fixedGenerationRange[0]"
                     [max]="fixedGenerationRange[1]"
-                    (onSlideEnd)="onSlideEnd($event)" />
+                    (onSlideEnd)="onSlideEnd($event)"/>
           {{ generationRange[1] }}
+
+          <p-button class="ml-auto"
+                      [outlined]="true"
+                      icon="pi pi-download"
+                      (onClick)="onDownloadCsvClick()"
+                      pTooltip="Download summary as csv"
+                      showDelay="500"/>
         </div>
       </div>
     }
