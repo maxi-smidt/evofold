@@ -10,7 +10,7 @@ import {Button} from 'primeng/button';
 import {AdaptiveEvolutionStrategyParams, EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
 import {ProgressSpinner} from 'primeng/progressspinner';
 import {RamachandranPlotComponent} from '../../shared/ramachandran-plot/ramachandran-plot.component';
-import {Dialog} from 'primeng/dialog';
+import {Dialog, DialogModule} from 'primeng/dialog';
 import {Tooltip} from 'primeng/tooltip';
 import {FitnessPlotComponent} from '../../shared/fitness-plot/fitness-plot.component';
 import {Slider, SliderSlideEndEvent} from 'primeng/slider';
@@ -28,6 +28,7 @@ import {FormsModule} from '@angular/forms';
     FitnessPlotComponent,
     Slider,
     FormsModule,
+    DialogModule,
   ],
   templateUrl: './structure-viewer.component.html',
   styleUrl: './structure-viewer.component.css'
@@ -54,6 +55,7 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
   protected resultsArray: StoredSimulationData[] = [];
   protected selectedResultsArray: StoredSimulationData[] = [];
   protected currentResultEntry: StoredSimulationData | undefined;
+  protected csvHeader: string = '';
 
   constructor(private route: ActivatedRoute,
               private router: Router,
@@ -71,6 +73,8 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     const method: string = history.state.method;
     const params: EvolutionStrategyParams | AdaptiveEvolutionStrategyParams = history.state.params;
     this.localStorageService.clearAll();
+
+    this.csvHeader = `sep=;\nsequence: ${sequence}\nmethod: ${method}\nparams: ${JSON.stringify(params)}\n`;
 
     this.subscription = this.simulationService.getMessages().subscribe({
       next: (msg: ReceivedSimulationData) => this.handleMessage(msg),
@@ -129,12 +133,28 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected onDownloadClick() {
-    const newBlob = new Blob([(this.source as any).data], {type: "text/plain"});
+  protected onDownloadCifClick() {
+    this.download(`EvoFold_${new Date().toISOString()}.cif`, (this.source as any).data);
+  }
+
+  protected onDownloadCsvClick() {
+    let csv = this.csvHeader;
+    csv += 'generation;fitness;sigma;angles;cif\n';
+    for (const result of Object.entries(this.results).sort((a, b) => a[1].generation - b[1].generation)) {
+      const r = result[1];
+      const cif = this.simulationService.convertAtomPositionsToCif(this.localStorageService.get(result[0]), r.sequence);
+      csv += `${r.generation};${r.fitness};${r.sigma};${JSON.stringify(r.angles)};"${cif}"\n`;
+    }
+
+    this.download(`EvoFold_${new Date().toISOString()}.csv`, csv);
+  }
+
+  private download(filename: string, text: string) {
+    const newBlob = new Blob([text], {type: "text/plain"});
     const data = window.URL.createObjectURL(newBlob);
     const link = document.createElement("a");
     link.href = data;
-    link.download = `EvoFold_${new Date().toISOString()}.cif`;
+    link.download = filename;
     link.click();
   }
 }
