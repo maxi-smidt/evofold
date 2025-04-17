@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from heapq import nsmallest
+from multiprocessing import get_context
 from typing import Callable, List
 
 from backend.algorithms.params.es_params import ESParams
@@ -45,8 +46,12 @@ class ES(ABC):
         fitness: Callable[[Protein], float] = lambda p: p.fitness
         return nsmallest(self._params.population_size, children, fitness)
 
+    def _create_protein(self, sequence: str) -> Protein:
+        return Protein(sequence, self._params.force_field)
+
     def _create_initial_population(self, sequence) -> List[Protein]:
-        return [Protein(sequence, self._params.force_field) for _ in range(self._params.population_size)]
+        with get_context("spawn").Pool() as pool:
+            return pool.map(self._create_protein, [sequence for _ in  range(self._params.population_size)])
 
     def _has_reached_stagnation(self) -> bool:
         return self._params.premature_stagnation is not None and self._reached_stagnation_inner()
