@@ -1,9 +1,9 @@
 <div class="flex h-full">
   <div class="flex flex-column bg-gray-200 w-2 p-1 gap-1 overflow-y-scroll">
-    @for (key of obj.keys(results); track key) {
+    @for (generation of results; track $index) {
       <div class="flex border border-1 border-round-lg align-items-center hover:bg-gray-300 justify-content-center p-3 select-none cursor-pointer"
-           [class.bg-green-300]="results[key].isLast" (click)="onEntryClick(key, results[key].sequence)">
-        <div class="text-gray-500">Generation {{ results[key].generation }}</div>
+           [class.bg-green-300]="generation[1].isLast" (click)="onEntryClick($index, generation[1].sequence)">
+        <div class="text-gray-500">Generation {{ generation[1].generation }}</div>
       </div>
     }
   </div>
@@ -49,15 +49,14 @@
             <p-button class="ml-auto"
                       [outlined]="true"
                       icon="pi pi-chart-scatter"
-                      (onClick)="isRamachandranVisible = true"
-                      pTooltip="Show Ramachandran plot"
+                      (onClick)="isPlotsVisible = true"
+                      pTooltip="Show plots"
                       showDelay="500"/>
             <p-button class="ml-auto"
                       [outlined]="true"
-                      [style.visibility]="receivedLast ? 'visible' : 'hidden'"
-                      icon="pi pi-list-check"
-                      (onClick)="isSummaryVisible = true"
-                      pTooltip="Show summary"
+                      icon="pi pi-file-excel"
+                      (onClick)="onDownloadCsvClick()"
+                      pTooltip="Download data as csv"
                       showDelay="500"/>
           </div>
         </div>
@@ -72,39 +71,24 @@
   </div>
 }
 
-<p-dialog header="Ramachandran Plot" [modal]="true" [(visible)]="isRamachandranVisible">
-  @if (currentResultEntry) {
-    <app-ramachandran-plot [simulationData]="[currentResultEntry]"
-                           [sequence]="sequence"/>
-  } @else {
-    Nothing to display yet, select a generation.
-  }
-</p-dialog>
-
-<p-dialog header="Summary" [modal]="true" [(visible)]="isSummaryVisible">
-  @if (isSummaryVisible) {
-    @if (obj.keys(results).length > 0) {
+<p-dialog header="Summary" [modal]="true" [(visible)]="isPlotsVisible">
+  @if (isPlotsVisible) {
+    @if (results.length > 0) {
       <div class="flex flex-column gap-2">
         <div class="flex flex-row gap-3">
-          <app-fitness-plot [simulationData]="selectedResultsArray"/>
-          <app-ramachandran-plot [simulationData]="selectedResultsArray" [sequence]="sequence"/>
+          <app-fitness-plot [simulationData]="selectedResults"/>
+          <app-ramachandran-plot [simulationData]="selectedResults" [sequence]="sequence"/>
         </div>
         <div class="flex w-full align-items-center gap-3">
-          {{ generationRange[0] }}
+          {{ generationRange()[0] }}
           <p-slider class="w-full"
-                    [(ngModel)]="generationRange"
+                    [ngModel]="generationRange()"
+                    (ngModelChange)="generationRange.set($event)"
                     [range]="true"
-                    [min]="fixedGenerationRange[0]"
-                    [max]="fixedGenerationRange[1]"
-                    (onSlideEnd)="onSlideEnd($event)"/>
-          {{ generationRange[1] }}
-
-          <p-button class="ml-auto"
-                      [outlined]="true"
-                      icon="pi pi-download"
-                      (onClick)="onDownloadCsvClick()"
-                      pTooltip="Download summary as csv"
-                      showDelay="500"/>
+                    [min]="1"
+                    [max]="results.length || 1"
+                    [disabled]="!receivedLast"/>
+          {{ generationRange()[1] }}
         </div>
       </div>
     }

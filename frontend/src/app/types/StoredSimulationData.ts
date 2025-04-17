@@ -10,7 +10,3 @@ export interface StoredSimulationData {
   angles: [number, number][];
   isLast: boolean;
 }
-
-export interface ResultEntries {
-  [localStorageKey: string]: StoredSimulationData;
-}

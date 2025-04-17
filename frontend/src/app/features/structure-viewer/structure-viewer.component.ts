@@ -1,9 +1,9 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, effect, OnDestroy, OnInit, signal, WritableSignal} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {SimulationService} from '../../services/simulation.service';
 import {Subscription} from 'rxjs';
 import {NgxStructureViewerComponent, Settings, Source} from 'ngx-structure-viewer';
-import {ReceivedSimulationData, ResultEntries, StoredSimulationData} from '../../types/StoredSimulationData';
+import {ReceivedSimulationData, StoredSimulationData} from '../../types/StoredSimulationData';
 import {LocalStorageService} from '../../services/local-storage.service';
 import {v4 as uuidv4} from 'uuid';
 import {Button} from 'primeng/button';
@@ -13,7 +13,7 @@ import {RamachandranPlotComponent} from '../../shared/ramachandran-plot/ramachan
 import {Dialog, DialogModule} from 'primeng/dialog';
 import {Tooltip} from 'primeng/tooltip';
 import {FitnessPlotComponent} from '../../shared/fitness-plot/fitness-plot.component';
-import {Slider, SliderSlideEndEvent} from 'primeng/slider';
+import {Slider} from 'primeng/slider';
 import {FormsModule} from '@angular/forms';
 
 @Component({
@@ -37,10 +37,8 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
   protected receivedLast: boolean = false;
   protected isLoading: boolean = false;
   protected sequence: string = '';
-  protected isRamachandranVisible: boolean = false;
-  protected isSummaryVisible: boolean = false;
-  protected generationRange: [number, number] = [0, 0];
-  protected fixedGenerationRange: [number, number] = [0, 0];
+  protected isPlotsVisible: boolean = false;
+  protected generationRange: WritableSignal<[number, number]> = signal([1, 1]);
 
   private subscription: Subscription | undefined;
   protected settings: Partial<Settings> = {
@@ -51,9 +49,8 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     prefer_label_asym_id: true,
   };
   protected source: Source | undefined;
-  protected results: ResultEntries = {};
-  protected resultsArray: StoredSimulationData[] = [];
-  protected selectedResultsArray: StoredSimulationData[] = [];
+  protected results: [string, StoredSimulationData][] = [];
+  protected selectedResults: [string, StoredSimulationData][] = [];
   protected currentResultEntry: StoredSimulationData | undefined;
   protected csvHeader: string = '';
 
@@ -61,13 +58,14 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
               private router: Router,
               private simulationService: SimulationService,
               private localStorageService: LocalStorageService) {
+    effect(() => {
+      this.selectedResults = this.results.slice(this.generationRange()[0] - 1, this.generationRange()[1]);
+      console.log(this.selectedResults);
+      console.log(this.generationRange());
+    });
   }
 
-  get obj() {
-    return Object;
-  }
-
-  ngOnInit() {
+  public ngOnInit() {
     this.isLoading = true;
     const sequence: string = history.state.sequence;
     const method: string = history.state.method;
@@ -89,31 +87,27 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     this.sequence = sequence;
   }
 
-  ngOnDestroy() {
+  public ngOnDestroy() {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
     this.localStorageService.clearAll();
   }
 
-  handleMessage(simulationData: ReceivedSimulationData): void {
+  protected handleMessage(simulationData: ReceivedSimulationData): void {
     this.isLoading = false;
     const key = uuidv4();
     this.localStorageService.set(key, simulationData.atomPositions);
-    this.results[key] = simulationData;
-    this.resultsArray = [...this.resultsArray, simulationData];
-    if (simulationData.isLast) {
-      this.receivedLast = simulationData.isLast;
-      this.generationRange = [1, simulationData.generation];
-      this.fixedGenerationRange = [1, simulationData.generation];
-      this.selectedResultsArray = this.resultsArray;
-    }
+    this.results = [...this.results, [key, simulationData]];
+    this.receivedLast = simulationData.isLast;
+    this.generationRange.set([1, simulationData.generation]);
     if (this.source === undefined) {
-      this.onEntryClick(key, simulationData.sequence);
+      this.onEntryClick(0, simulationData.sequence);
     }
   }
 
-  onEntryClick(localStorageKey: string, sequence: string): void {
+  protected onEntryClick(index: number, sequence: string): void {
+    const localStorageKey = this.results[index][0];
     const atomPositions = this.localStorageService.get(localStorageKey);
     if (atomPositions === null) return;
     this.source = {
@@ -124,13 +118,7 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
       data: this.simulationService.convertAtomPositionsToCif(atomPositions, sequence)
     };
 
-    this.currentResultEntry = this.results[localStorageKey];
-  }
-
-  protected onSlideEnd(event: SliderSlideEndEvent) {
-    if (event.values) {
-      this.selectedResultsArray = this.resultsArray.slice(event.values[0] - 1, event.values[1]);
-    }
+    this.currentResultEntry = this.results[index][1];
   }
 
   protected onDownloadCifClick() {
@@ -140,12 +128,11 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
   protected onDownloadCsvClick() {
     let csv = this.csvHeader;
     csv += 'generation;fitness;sigma;angles;cif\n';
-    for (const result of Object.entries(this.results).sort((a, b) => a[1].generation - b[1].generation)) {
+    for (const result of this.results) {
       const r = result[1];
       const cif = this.simulationService.convertAtomPositionsToCif(this.localStorageService.get(result[0]), r.sequence);
       csv += `${r.generation};${r.fitness};${r.sigma};${JSON.stringify(r.angles)};"${cif}"\n`;
     }
-
     this.download(`EvoFold_${new Date().toISOString()}.csv`, csv);
   }
 

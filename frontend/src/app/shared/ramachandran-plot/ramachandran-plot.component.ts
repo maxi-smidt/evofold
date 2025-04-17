@@ -90,18 +90,18 @@ export class RamachandranPlotComponent {
     },
     shapes: this.makeFavorShapes()
   }
-  public simulationData: InputSignal<StoredSimulationData[]> = input.required();
+  public simulationData: InputSignal<[string, StoredSimulationData][]> = input.required();
   public sequence: InputSignal<string> = input.required();
   protected data: Signal<Data[]> = computed(() => {
     return this.simulationData().map(d => {
       return {
-        x: d.angles.map(angle => angle[0]).slice(1, -1),
-        y: d.angles.map(angle => angle[1]).slice(1, -1),
+        x: d[1].angles.map(angle => angle[0]).slice(1, -1),
+        y: d[1].angles.map(angle => angle[1]).slice(1, -1),
         hovertemplate: '<b>%{text}</b><br>ф: %{x:.2f}°<br>Ψ: %{y:.2f}°<extra></extra>',
         text: this.sequence().split('').map((sequence, i) => `Pos ${i + 1} (${sequence})`).slice(1, -1),
         type: 'scatter',
         mode: 'markers',
-        name: `Gen. ${d.generation}`
+        name: `Gen. ${d[1].generation}`
       }
     });
   });
