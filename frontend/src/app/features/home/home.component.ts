@@ -7,7 +7,7 @@ import {MessageModule} from 'primeng/message';
 import {Router} from '@angular/router';
 import {SliderModule} from 'primeng/slider';
 import {AdaptiveEvolutionStrategyParams, DerandomizedEvolutionStrategyParams, EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
-import {SelectButtonModule} from 'primeng/selectbutton';
+import {SelectButtonChangeEvent, SelectButtonModule} from 'primeng/selectbutton';
 import {InputNumberModule} from 'primeng/inputnumber';
 import {InputSwitchModule} from 'primeng/inputswitch';
 import {TooltipModule} from 'primeng/tooltip';
@@ -48,7 +48,7 @@ export class HomeComponent {
   protected esOptions: any[] = [{label: 'Adaptive ES', value: 'adaptive'}, {label: 'Self-adaptive ES', value: 'self-adaptive'}, {label: 'Derandomized ES', value: 'derandomized'}];
   protected selectedESOption: 'adaptive' | 'self-adaptive' | 'derandomized' = 'adaptive';
   protected pcOptions: any[] = [{label: 'None', value: 'none'}, {label: 'Termination', value: 'terminate'}, {label: 'Restart', value: 'restart'}];
-  protected selectedPCOption: 'none' | 'terminate' | 'restart' = 'none';
+  private previousPrematureStrategy: string = 'none';
 
   protected params: EvolutionStrategyParams = {
     generations: 500,
@@ -57,8 +57,8 @@ export class HomeComponent {
     plusSelection: true,
     forceField: 'amber',
     prematureStrategy: 'none',
-    prematureStagnation: 15,
-    prematureSigma: 0.01,
+    prematureStagnation: null,
+    prematureSigma: null,
     prematureFitness: null,
     sigma: 36,
   }
@@ -175,5 +175,20 @@ export class HomeComponent {
       case 'derandomized': return {...this.params, ...this.derandomizedParams};
       default: throw new Error('Unknown option');
     }
+  }
+
+  protected onPrematureStrategyChange(event: SelectButtonChangeEvent) {
+    if (event.value === 'none') {
+      this.params.prematureStagnation = null;
+      this.params.prematureSigma = null;
+      this.params.prematureFitness = null;
+    } else {
+      if (this.previousPrematureStrategy === 'none') {
+        this.params.prematureStagnation = 15;
+        this.params.prematureSigma = 0.01;
+        this.params.prematureFitness = null;
+      }
+    }
+    this.previousPrematureStrategy = event.value;
   }
 }

@@ -25,7 +25,7 @@
             <div class="flex flex-column gap-5">
               <div class="flex flex-column gap-3">
                 <p-selectButton styleClass="w-full" [options]="esOptions" [(ngModel)]="selectedESOption"
-                                optionLabel="label" optionValue="value"/>
+                                optionLabel="label" optionValue="value" [allowEmpty]="false"/>
 
                 <div>
                   <label for="generations">Generations</label>
@@ -58,10 +58,10 @@
                 </div>
                 <div class="flex justify-content-between">
                   <p-selectButton [options]="selectionOptions" [(ngModel)]="plusSelection" optionLabel="label"
-                                  optionValue="value"/>
+                                  optionValue="value" [allowEmpty]="false"/>
 
                   <p-selectButton [options]="forceFieldOptions" [(ngModel)]="params.forceField" optionLabel="label"
-                                  optionValue="value"/>
+                                  optionValue="value" [allowEmpty]="false"/>
                 </div>
               </div>
 
@@ -132,7 +132,7 @@
           <p-tabpanel value="1">
             <div class="flex flex-column gap-5">
               <p-selectButton styleClass="w-full" [options]="pcOptions" [(ngModel)]="params.prematureStrategy"
-                              optionLabel="label" optionValue="value"/>
+                              optionLabel="label" optionValue="value" [allowEmpty]="false" (onChange)="onPrematureStrategyChange($event)"/>
 
               <div>
                 <label>Stagnation
