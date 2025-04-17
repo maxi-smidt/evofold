@@ -53,13 +53,13 @@ export class FitnessPlotComponent {
       b: 40,
     },
   };
-  public simulationData: InputSignal<StoredSimulationData[]> = input.required();
+  public simulationData: InputSignal<[string, StoredSimulationData][]> = input.required();
   protected _showSigma = signal(false);
   protected data: Signal<Data[]> = computed(() => {
     const fitnessData: Data[] = [
       {
-        x: this.simulationData().map(d => d.generation),
-        y: this.simulationData().map(d => d.fitness),
+        x: this.simulationData().map(d => d[1].generation),
+        y: this.simulationData().map(d => d[1].fitness),
         yaxis: 'y1',
         type: 'scatter',
         name: 'fitness'
@@ -68,8 +68,8 @@ export class FitnessPlotComponent {
     if (this._showSigma()) {
       fitnessData.push(
         {
-          x: this.simulationData().map(d => d.generation),
-          y: this.simulationData().map(d => d.sigma),
+          x: this.simulationData().map(d => d[1].generation),
+          y: this.simulationData().map(d => d[1].sigma),
           yaxis: 'y2',
           type: 'scatter',
           name: 'sigma'
