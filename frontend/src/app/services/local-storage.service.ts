@@ -27,4 +27,8 @@ export class LocalStorageService {
   clearAll() {
     localStorage.clear();
   }
+
+  has(key: string): boolean {
+    return localStorage.getItem(key) !== null;
+  }
 }

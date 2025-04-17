@@ -14,6 +14,7 @@ import {TooltipModule} from 'primeng/tooltip';
 import {MessageService} from 'primeng/api';
 import {ToastModule} from 'primeng/toast';
 import {Tab, TabList, TabPanel, TabPanels, Tabs} from 'primeng/tabs';
+import {LocalStorageService} from '../../services/local-storage.service';
 
 @Component({
   selector: 'app-home',
@@ -75,7 +76,8 @@ export class HomeComponent {
   }
 
   constructor(private router: Router,
-              private messageService: MessageService) {
+              private messageService: MessageService,
+              private localStorageService: LocalStorageService) {
   }
 
 
@@ -190,5 +192,32 @@ export class HomeComponent {
       }
     }
     this.previousPrematureStrategy = event.value;
+  }
+
+  protected onSaveParamsClick() {
+    this.localStorageService.set('defaultParams', this.params);
+    this.localStorageService.set('method', this.selectedESOption);
+
+    if (this.selectedESOption === 'adaptive') {
+      this.localStorageService.set('additionalParams', this.adaptiveParams);
+    }
+    if (this.selectedESOption === 'derandomized') {
+      this.localStorageService.set('additionalParams', this.derandomizedParams);
+    }
+  }
+
+  protected onLoadParamsClick() {
+    if (!this.localStorageService.has('defaultParams')) {
+      this.messageService.add({severity: 'error', summary: 'Error', detail: 'No parameters have been saved yet.'});
+      return;
+    }
+    this.params = this.localStorageService.get('defaultParams');
+    this.selectedESOption = this.localStorageService.get('method');
+    if (this.selectedESOption === 'adaptive') {
+      this.adaptiveParams = this.localStorageService.get('additionalParams');
+    }
+    if (this.selectedESOption === 'derandomized') {
+      this.derandomizedParams = this.localStorageService.get('additionalParams');
+    }
   }
 }

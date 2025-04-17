@@ -180,10 +180,17 @@
         </p-tabpanels>
       </p-tabs>
 
-      <div>
+      <div class="flex justify-content-between">
         <p-button label="Simulate" severity="secondary" outlined
                   [disabled]="errorMessage !== null || sequence.trim().length === 0"
                   (click)="onSimulateClick()"/>
+
+        <div class="flex gap-2">
+          <p-button severity="secondary" icon="pi pi-save" outlined (click)="onSaveParamsClick()"
+                    pTooltip="Save current parameters" showDelay="500"/>
+          <p-button severity="secondary" icon="pi pi-sync" outlined (click)="onLoadParamsClick()"
+                    pTooltip="Load saved parameters" showDelay="500"/>
+        </div>
       </div>
     </div>
   </div>
