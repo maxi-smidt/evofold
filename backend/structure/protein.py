@@ -6,7 +6,7 @@ from random import randint
 from openmm import VerletIntegrator
 from openmm.app import Simulation, NoCutoff, PDBxFile, ForceField
 from openmm.unit import pico, kilojoule_per_mole
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from backend.structure.amino_acid import AminoAcid
 from backend.structure.types import AngleList
@@ -20,6 +20,8 @@ class Protein:
         'charmm': ForceField('charmm36.xml'),
     }
 
+    SIMULATION_CACHE: Dict[str, Simulation] = {}
+
     def __init__(self, sequence: str, force_field: str='amber', *, angles: Optional[AngleList]=None, sigma: Optional[float]=None, flat_angles: Optional[np.array]=None):
         self._sequence:       str             = sequence
         self._force_field:    str             = force_field
@@ -27,7 +29,7 @@ class Protein:
         self._atom_positions: List            = []
         self._fitness:        Optional[float] = None
         self._cif_str:        Optional[str]   = None
-        self._sigma:          Optional[float] = sigma # for self adaptive evolution strategy
+        self._sigma:          Optional[float] = sigma # for self-adaptive evolution strategy
 
         assert not angles or len(angles) == len(sequence)
 
@@ -149,10 +151,25 @@ class Protein:
 
     def _compute_fitness(self) -> None:
         pdbx = PDBxFile(StringIO(self._cif_str))
-        force_field = self.FORCE_FIELDS[self._force_field]
-        system = force_field.createSystem(pdbx.topology, nonbondedMethod=NoCutoff)
-        integrator = VerletIntegrator(0.001 * pico.factor)
-        simulation = Simulation(pdbx.topology, system, integrator)
-        simulation.context.setPositions(pdbx.positions)
+        simulation = self._get_simulation(pdbx)
         state = simulation.context.getState(getEnergy=True)
         self._fitness = state.getPotentialEnergy().value_in_unit(kilojoule_per_mole)
+
+    def _get_simulation(self, pdbx: PDBxFile) -> Simulation:
+        cache_key = f"{self._sequence}_{self._force_field}"
+        if cache_key in Protein.SIMULATION_CACHE:
+            simulation = Protein.SIMULATION_CACHE[cache_key]
+            simulation.context.setPositions(pdbx.positions)
+        else:
+            force_field = self.FORCE_FIELDS[self._force_field]
+            system = force_field.createSystem(pdbx.topology, nonbondedMethod=NoCutoff)
+            integrator = VerletIntegrator(0.001 * pico.factor)
+            simulation = Simulation(pdbx.topology, system, integrator)
+            simulation.context.setPositions(pdbx.positions)
+            Protein.SIMULATION_CACHE[cache_key] = simulation
+
+            if len(Protein.SIMULATION_CACHE) > 100:
+                keys_to_remove = list(Protein.SIMULATION_CACHE.keys())[:20]
+                for key in keys_to_remove:
+                    del Protein.SIMULATION_CACHE[key]
+        return simulation
