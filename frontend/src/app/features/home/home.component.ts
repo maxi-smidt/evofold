@@ -204,6 +204,8 @@ export class HomeComponent {
     if (this.selectedESOption === 'derandomized') {
       this.localStorageService.set('additionalParams', this.derandomizedParams);
     }
+
+    this.messageService.add({severity: 'success', summary: 'Success', detail: 'Parameters saved successfully.'});
   }
 
   protected onLoadParamsClick() {
