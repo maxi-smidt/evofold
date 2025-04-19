@@ -83,7 +83,7 @@ export class HomeComponent {
 
   onInput(event: Event) {
     const inputElement = event.target as HTMLTextAreaElement;
-    this.sequence = inputElement.value.toUpperCase();
+    this.sequence = inputElement.value.toUpperCase().trim();
     inputElement.value = this.sequence;
 
     this.errorMessage = null;
