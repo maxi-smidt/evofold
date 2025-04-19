@@ -9,13 +9,13 @@ export class LocalStorageService {
   constructor() {
   }
 
-  set(key: string, value: any) {
+  public set(key: string, value: any) {
     const jsonString = JSON.stringify(value);
     const compressed = LZString.compress(jsonString);
     localStorage.setItem(key, compressed);
   }
 
-  get(key: string): any | null {
+  public get(key: string): any | null {
     const compressed = localStorage.getItem(key);
     if (compressed) {
       const decompressed = LZString.decompress(compressed);
@@ -24,11 +24,15 @@ export class LocalStorageService {
     return null;
   }
 
-  clearAll() {
+  public delete(key: string) {
+    localStorage.removeItem(key);
+  }
+
+  public clearAll() {
     localStorage.clear();
   }
 
-  has(key: string): boolean {
+  public has(key: string): boolean {
     return localStorage.getItem(key) !== null;
   }
 }
