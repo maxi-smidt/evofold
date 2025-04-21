@@ -52,7 +52,7 @@ export class HomeComponent {
   private previousPrematureStrategy: string = 'none';
 
   protected params: EvolutionStrategyParams = {
-    generations: 500,
+    generations: 100,
     populationSize: 100,
     childrenSize: 600,
     plusSelection: true,
