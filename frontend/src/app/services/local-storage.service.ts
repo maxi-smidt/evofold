@@ -28,6 +28,20 @@ export class LocalStorageService {
     localStorage.removeItem(key);
   }
 
+  public deleteLike(key: string) {
+    const keysToDelete: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const currentKey = localStorage.key(i);
+      if (currentKey?.startsWith(key)) {
+        keysToDelete.push(currentKey);
+      }
+    }
+
+    for (const keyToDelete of keysToDelete) {
+      this.delete(keyToDelete);
+    }
+  }
+
   public clearAll() {
     localStorage.clear();
   }
