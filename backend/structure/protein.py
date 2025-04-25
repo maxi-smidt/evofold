@@ -48,7 +48,7 @@ class Protein:
     def _compute_structure(self):
         predecessor = None
         for i, (aa, angles) in enumerate(zip(self._sequence, self._angles)):
-            current_aa = AminoAcid(i, aa, angles, predecessor, i == len(self._sequence) - 1)
+            current_aa = AminoAcid(aa, angles, predecessor, i == len(self._sequence) - 1)
             self._amino_acids.append(current_aa)
             predecessor = current_aa
 

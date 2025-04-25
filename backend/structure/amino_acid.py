@@ -9,8 +9,7 @@ from backend.structure.types import Position, Angle
 
 
 class AminoAcid:
-    def __init__(self, sequence_id: int, one_letter_code: str, angles: Angle, predecessor: Optional["AminoAcid"], is_last: bool) -> None:
-        self._sequence_id = sequence_id
+    def __init__(self, one_letter_code: str, angles: Angle, predecessor: Optional["AminoAcid"], is_last: bool) -> None:
         self._three_letter_code = rc.restype_1to3[one_letter_code]
         self._angles = angles
         self._predecessor = predecessor
@@ -61,22 +60,28 @@ class AminoAcid:
             self._build_oxygens()
 
     @staticmethod
-    def _build_atom(p1: np.ndarray, p2: np.ndarray, p3: np.ndarray, bond_length: float, bond_angle: float, dihedral_angle: float) -> np.ndarray:
+    def _build_atom(A: np.ndarray, B: np.ndarray, C: np.ndarray, bond_length: float, bond_angle: float, dihedral_angle: float) -> np.ndarray:
         bond_angle_rad = np.radians(bond_angle)
-        dihedral_angle_rad = np.radians(dihedral_angle)
+        dihedral_angle_rad = np.radians(-dihedral_angle) # angle flip is necessary because of the frame orientation
 
-        u_z = (p2 - p3) / np.linalg.norm(p2 - p3)
+        AB = B - A
+        BC = C - B
+        bc = BC / np.linalg.norm(BC)
 
-        BA = p1 - p2
-        v_perp = BA - np.dot(BA, u_z) * u_z
-        u_x = v_perp / np.linalg.norm(v_perp)
-        u_y = np.cross(u_z, u_x)
+        n = np.cross(AB, bc)
+        n /= np.linalg.norm(n)
 
-        x = bond_length * np.sin(bond_angle_rad) * np.cos(dihedral_angle_rad)
-        y = bond_length * np.sin(bond_angle_rad) * np.sin(dihedral_angle_rad)
-        z = bond_length * np.cos(bond_angle_rad)
+        v = np.cross(n, bc)
+        v /= np.linalg.norm(v)
 
-        return p3 + x * u_x + y * u_y + z * u_z
+        D2 = np.array([
+            -bond_length * np.cos(bond_angle_rad),
+            bond_length * np.cos(dihedral_angle_rad) * np.sin(bond_angle_rad),
+            bond_length * np.sin(dihedral_angle_rad) * np.sin(bond_angle_rad)
+        ])
+
+        M = np.stack([bc, v, n], axis=1)
+        return M @ D2 + C
 
     def _transform_atom_positions(self, atom_positions: Dict[str, Position]) -> Dict[str, np.ndarray]:
         prev_n  = np.array(self._predecessor.n)
