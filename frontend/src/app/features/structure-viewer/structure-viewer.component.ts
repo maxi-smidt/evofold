@@ -68,7 +68,7 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     const sequence: string = history.state.sequence;
     const method: string = history.state.method;
     const params: EvolutionStrategyParams | AdaptiveEvolutionStrategyParams = history.state.params;
-    this.deleteCifStorage();
+    this.localStorageService.deleteLike('cif-')
 
     this.csvHeader = `sep=;\nsequence: ${sequence}\nmethod: ${method}\nparams: ${JSON.stringify(params)}\n`;
 
@@ -89,12 +89,11 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
-    this.deleteCifStorage();
   }
 
   protected handleMessage(simulationData: ReceivedSimulationData): void {
     this.isLoading = false;
-    const key = uuidv4();
+    const key = `cif-${uuidv4()}`;
     this.localStorageService.set(key, simulationData.atomPositions);
     this.results = [...this.results, [key, simulationData]];
     this.receivedLast = simulationData.isLast;
@@ -141,11 +140,5 @@ export class StructureViewerComponent implements OnInit, OnDestroy {
     link.href = data;
     link.download = filename;
     link.click();
-  }
-
-  private deleteCifStorage() {
-    for (const result of this.results) {
-      this.localStorageService.delete(result[0]);
-    }
   }
 }
