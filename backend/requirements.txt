@@ -9,7 +9,7 @@ asttokens==3.0.0
 async-lru==2.0.5
 attrs==25.3.0
 babel==2.17.0
-beautifulsoup4==4.13.3
+beautifulsoup4==4.13.4
 bio==1.7.1
 biopython==1.85
 biothings_client==0.4.1
