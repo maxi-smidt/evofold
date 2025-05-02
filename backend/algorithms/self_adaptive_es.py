@@ -17,20 +17,16 @@ class SelfAdaptiveES(ES):
 
     def _mutate_protein(self, protein: Protein) -> Protein:
         angles, sigma = self._self_adaptive_gaussian_mutation(protein)
-        return Protein(protein.sequence, self._params.force_field, angles=angles, sigma=sigma)
+        return Protein(protein.sequence, self._params.force_field, flat_angles=angles, sigma=sigma)
 
     @staticmethod
     def _self_adaptive_gaussian_mutation(protein: Protein) -> Tuple[AngleList, float]:
-        sigma = protein.sigma * math.exp((1 / math.sqrt(len(protein.angles))) * np.random.normal(0, 1))
-        mutations = np.random.normal(0, sigma, size=(len(protein.angles), 2))
-        mutated_angles = [
-            (
-                np.clip(phi + d_phi, Protein.ANGLE_MIN, Protein.ANGLE_MAX),
-                np.clip(psi + d_psi, Protein.ANGLE_MIN, Protein.ANGLE_MAX),
-                omega
-            )
-            for (phi, psi, omega), (d_phi, d_psi) in zip(protein.angles, mutations)
-        ]
+        sigma = protein.sigma * math.exp((1 / math.sqrt(len(protein.angles_flat))) * np.random.normal(0, 1))
+        mutated_angles = np.clip(
+            protein.angles_flat + np.random.normal(0, sigma, len(protein.angles_flat)),
+            Protein.ANGLE_MIN,
+            Protein.ANGLE_MAX
+        )
         return mutated_angles, sigma
 
     @overrides
