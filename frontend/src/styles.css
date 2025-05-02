@@ -6,4 +6,13 @@ body {
 
 html, body {
   font-family: "Helvetica", "Arial", sans-serif !important;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.router-outlet-container {
+  height: calc(100vh - 75px);
+  overflow-y: auto;
 }
