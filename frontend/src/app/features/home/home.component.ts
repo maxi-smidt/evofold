@@ -49,6 +49,7 @@ export class HomeComponent {
   protected esOptions: any[] = [{label: 'Adaptive ES', value: 'adaptive'}, {label: 'Self-adaptive ES', value: 'self-adaptive'}, {label: 'Derandomized ES', value: 'derandomized'}];
   protected selectedESOption: 'adaptive' | 'self-adaptive' | 'derandomized' = 'adaptive';
   protected pcOptions: any[] = [{label: 'None', value: 'none'}, {label: 'Termination', value: 'terminate'}, {label: 'Restart', value: 'restart'}];
+  protected crossoverOptions: any[] = [{label: 'Global arithmetic', value: 'global-arithmetic'}, {label: 'Global uniform', value: 'global-uniform'}];
   private previousPrematureStrategy: string = 'none';
 
   protected params: EvolutionStrategyParams = {
@@ -65,6 +66,7 @@ export class HomeComponent {
   }
 
   protected derandomizedParams: DerandomizedEvolutionStrategyParams = {
+    crossover: 'global-arithmetic',
     tau: 0,
     alpha: 1 / 0,
   }
