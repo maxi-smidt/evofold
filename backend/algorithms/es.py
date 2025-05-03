@@ -1,3 +1,5 @@
+import numpy as np
+
 from abc import ABC, abstractmethod
 from heapq import nsmallest
 from multiprocessing import get_context
@@ -31,7 +33,7 @@ class ES(ABC):
         self._local_best_offspring = min(self._population, key=lambda p: p.fitness)
         self._global_best_offspring = min(self._local_best_offspring, self._global_best_offspring, key=lambda p: p.fitness)
 
-        sigma = sigma or sum(p.sigma for p in self._population) / len(self._population)
+        sigma = sigma or np.mean(self._local_best_offspring.sigma)
 
         start_strategy = self._has_reached_stagnation() or self._has_reached_sigma(sigma) or self._has_reached_fitness()
         will_terminate = start_strategy and self._params.premature_strategy == 'terminate'

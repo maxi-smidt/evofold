@@ -22,3 +22,7 @@ export interface DerandomizedEvolutionStrategyParams {
   alpha: number;
   tau: number;
 }
+
+export interface SelfAdaptiveEvolutionStrategyParams {
+  strategyParam: 'gene-wise' | 'genome-wise';
+}

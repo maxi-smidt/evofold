@@ -22,14 +22,14 @@ class Protein:
 
     SIMULATION_CACHE: Dict[str, Simulation] = {}
 
-    def __init__(self, sequence: str, force_field: str='amber', *, angles: Optional[AngleList]=None, sigma: Optional[float]=None, flat_angles: Optional[np.array]=None):
-        self._sequence:       str             = sequence
-        self._force_field:    str             = force_field
-        self._amino_acids:    List[AminoAcid] = []
-        self._atom_positions: List            = []
-        self._fitness:        Optional[float] = None
-        self._cif_str:        Optional[str]   = None
-        self._sigma:          Optional[float] = sigma # for self-adaptive evolution strategy
+    def __init__(self, sequence: str, force_field: str='amber', *, angles: Optional[AngleList]=None, sigma: Optional[np.array]=None, flat_angles: Optional[np.array]=None):
+        self._sequence:       str                = sequence
+        self._force_field:    str                = force_field
+        self._amino_acids:    List[AminoAcid]    = []
+        self._atom_positions: List               = []
+        self._fitness:        Optional[float]    = None
+        self._cif_str:        Optional[str]      = None
+        self._sigma:          Optional[np.array] = sigma # for self-adaptive evolution strategy
 
         assert not angles or len(angles) == len(sequence)
 
@@ -77,7 +77,7 @@ class Protein:
         return self._atom_positions
 
     @property
-    def sigma(self) -> float:
+    def sigma(self) -> np.array:
         return self._sigma
 
     @sigma.setter

@@ -20,7 +20,7 @@ from backend.algorithms.derandomized_es import DerandomizedES
 from backend.algorithms.es import ES
 from backend.algorithms.params.adaptive_es_params import AdaptiveESParams
 from backend.algorithms.params.derandomized_es_params import DerandomizedESParams
-from backend.algorithms.params.es_params import ESParams
+from backend.algorithms.params.self_adaptive_es_params import SelfAdaptiveESParams
 from backend.algorithms.self_adaptive_es import SelfAdaptiveES
 from backend.structure.protein import Protein
 
@@ -180,7 +180,7 @@ def get_params_by_method(method: str, params):
     if method == "adaptive":
         return AdaptiveESParams(**params)
     if method == "self-adaptive":
-        return ESParams(**params)
+        return SelfAdaptiveESParams(**params)
     if method == "derandomized":
         return DerandomizedESParams(**params)
     raise Exception("Unknown method")
