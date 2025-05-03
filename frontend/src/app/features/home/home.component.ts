@@ -6,7 +6,12 @@ import {NgClass} from '@angular/common';
 import {MessageModule} from 'primeng/message';
 import {Router} from '@angular/router';
 import {SliderModule} from 'primeng/slider';
-import {AdaptiveEvolutionStrategyParams, DerandomizedEvolutionStrategyParams, EvolutionStrategyParams} from '../../types/EvolutionStrategyParams';
+import {
+  AdaptiveEvolutionStrategyParams,
+  DerandomizedEvolutionStrategyParams,
+  EvolutionStrategyParams,
+  SelfAdaptiveEvolutionStrategyParams
+} from '../../types/EvolutionStrategyParams';
 import {SelectButtonChangeEvent, SelectButtonModule} from 'primeng/selectbutton';
 import {InputNumberModule} from 'primeng/inputnumber';
 import {InputSwitchModule} from 'primeng/inputswitch';
@@ -50,6 +55,7 @@ export class HomeComponent {
   protected selectedESOption: 'adaptive' | 'self-adaptive' | 'derandomized' = 'adaptive';
   protected pcOptions: any[] = [{label: 'None', value: 'none'}, {label: 'Termination', value: 'terminate'}, {label: 'Restart', value: 'restart'}];
   protected crossoverOptions: any[] = [{label: 'Global arithmetic', value: 'global-arithmetic'}, {label: 'Global uniform', value: 'global-uniform'}];
+  protected strategyParameterOptions: any[] = [{label: 'Gene Wise', value: 'gene-wise'}, {label: 'Genome Wise', value: 'genome-wise'}];
   private previousPrematureStrategy: string = 'none';
 
   protected params: EvolutionStrategyParams = {
@@ -69,6 +75,10 @@ export class HomeComponent {
     crossover: 'global-arithmetic',
     tau: 0,
     alpha: 1 / 0,
+  }
+
+  protected selfAdaptiveParams: SelfAdaptiveEvolutionStrategyParams = {
+    strategyParam: 'gene-wise',
   }
 
   protected adaptiveParams: AdaptiveEvolutionStrategyParams = {
@@ -175,7 +185,7 @@ export class HomeComponent {
   private correctParams(): any {
     switch (this.selectedESOption) {
       case 'adaptive': return {...this.params, ...this.adaptiveParams};
-      case 'self-adaptive': return this.params;
+      case 'self-adaptive': return  {...this.params, ...this.selfAdaptiveParams};
       case 'derandomized': return {...this.params, ...this.derandomizedParams};
       default: throw new Error('Unknown option');
     }
@@ -202,6 +212,9 @@ export class HomeComponent {
 
     if (this.selectedESOption === 'adaptive') {
       this.localStorageService.set('additionalParams', this.adaptiveParams);
+    }
+    if (this.selectedESOption === 'self-adaptive') {
+      this.localStorageService.set('additionalParams', this.selfAdaptiveParams);
     }
     if (this.selectedESOption === 'derandomized') {
       this.localStorageService.set('additionalParams', this.derandomizedParams);

@@ -106,6 +106,16 @@
                     <p-inputNumber class="mt-1 w-full" [(ngModel)]="adaptiveParams.alpha" [showButtons]="true" [min]="1"
                                    [step]="0.025"/>
                   </div>
+                } @else if (selectedESOption === 'self-adaptive'){
+                  <div>
+                    <label class="pr-2">Strategy Parameter
+                        <i
+                          pTooltip="Specifies if the strategy parameter sigma is stored for the entire genome or for each individual gene."
+                          class="pi pi-info-circle" tooltipPosition="top"></i>
+                    </label>
+                    <p-selectButton class="mt-1 w-full" styleClass="w-full" [options]="strategyParameterOptions" [(ngModel)]="selfAdaptiveParams.strategyParam" optionLabel="label"
+                                    optionValue="value" [allowEmpty]="false"/>
+                  </div>
                 } @else if (selectedESOption === 'derandomized') {
                   <div>
                     <label class="pr-2">Crossover
