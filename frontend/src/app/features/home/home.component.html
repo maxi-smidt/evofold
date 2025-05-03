@@ -108,6 +108,15 @@
                   </div>
                 } @else if (selectedESOption === 'derandomized') {
                   <div>
+                    <label class="pr-2">Crossover
+                        <i
+                          pTooltip="The crossover applied on the population in each generation. Uniform: randomly assembled genome; Arithmetic: genome is the average of the population"
+                          class="pi pi-info-circle" tooltipPosition="top"></i>
+                    </label>
+                    <p-selectButton class="mt-1 w-full" styleClass="w-full" [options]="crossoverOptions" [(ngModel)]="derandomizedParams.crossover" optionLabel="label"
+                                    optionValue="value" [allowEmpty]="false"/>
+                  </div>
+                  <div>
                     <label class="pr-2">Alpha
                       <i
                         pTooltip="Learning rate, how strongly the current change is incorporated into the direction vector of the optimization learned over all generations."

@@ -18,6 +18,7 @@ export interface AdaptiveEvolutionStrategyParams {
 }
 
 export interface DerandomizedEvolutionStrategyParams {
+  crossover: 'global-arithmetic' | 'global-uniform';
   alpha: number;
   tau: number;
 }
