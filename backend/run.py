@@ -11,6 +11,11 @@ AAs = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P'
 
 t = time.time()
 
+def log(msg: str):
+    print(msg)
+    with open("log.txt", "a") as f:
+        f.write(f"{msg}\n")
+
 def generate_sequence(n: int):
     return ''.join([np.random.choice(AAs) for _ in range(n)])
 
@@ -27,23 +32,19 @@ def measure_es(method: str, params: SelfAdaptiveESParams, sequence: str):
         cb = partial(save_time, l=run_times)
         es = SelfAdaptiveES(params)
         es.run(sequence, callback=cb)
-        print(f"{method};{len(sequence)};{np.mean(run_times)}")
-        with open("log.txt", "a") as f:
-            f.write(f"{method};{len(sequence)};{np.mean(run_times)}\n")
+        log(f"{method};{len(sequence)};{np.mean(run_times)}")
 
 def run_measurement(sequence: str):
-    print(f"seq: {sequence}")
-    print(f"starting amber n={len(sequence)}")
+    log(f"seq: {sequence}")
+    log(f"starting amber n={len(sequence)}")
     measure_es('amber', SelfAdaptiveESParams(), sequence)
-    print(f"starting charmm n={len(sequence)}")
+    log(f"starting charmm n={len(sequence)}")
     measure_es('charmm', SelfAdaptiveESParams(force_field='charmm'), sequence)
-
 
 def main():
     for n in [10, 100, 1000]:
         s = generate_sequence(n)
         run_measurement(s)
-
 
 
 if __name__ == '__main__':
