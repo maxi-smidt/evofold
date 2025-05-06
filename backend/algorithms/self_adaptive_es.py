@@ -1,5 +1,4 @@
 import math
-
 import numpy as np
 
 from typing import List, Tuple
@@ -56,7 +55,7 @@ class SelfAdaptiveES(ES):
                 protein.sigma = np.full(len(sequence) * 2, self._params.sigma)
 
     @overrides
-    def run(self, sequence: str, callback: ES.Callback, callback_frequency: int=1) -> Protein:
+    def run(self, sequence: str, callback: ES.Callback=None, callback_frequency: int=1) -> Protein:
         self._initialize_run(sequence, callback_frequency)
 
         self._initialize_sigma(sequence)
