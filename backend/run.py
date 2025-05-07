@@ -42,10 +42,17 @@ def run_measurement(sequence: str):
     measure_es('charmm', SelfAdaptiveESParams(force_field='charmm'), sequence)
 
 def main():
-    for n in [55]:#[10, 100, 1000]:
+    for n in [30, 75, 150]:
         s = generate_sequence(n)
         run_measurement(s)
 
 
 if __name__ == '__main__':
     main()
+
+# GQEFDRTGKM
+#
+# PVTPRSKLVIWRFAKDLWFTMSVCNYVYGDTHASEDYFAKHYSCKVYTMWPGILY
+#
+# WAEGLISITGPKTMSPVNNVHMPFFVYRYQCCVTQANFYMWFTCAHTDRWDYVPLREYAESCTPHCNASDLPAFQVIGSDSTWTFLAPQSECMAWFQMWS
+#
