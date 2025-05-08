@@ -1,22 +1,15 @@
-from functools import partial
-
 import optuna
 
 from backend.algorithms.adaptive_es import AdaptiveES
 from backend.algorithms.params.adaptive_es_params import AdaptiveESParams
+
 
 def run_adaptive_es(sequence: str, params: AdaptiveESParams) -> float:
     es = AdaptiveES(params)
     best_protein = es.run(sequence)
     return best_protein.fitness  # assuming lower fitness is better
 
-def print_callback(study, trial):
-    print(f"Trial {trial.number} finished.")
-    print(f"  Value: {trial.value}")
-    print(f"  Params: {trial.params}")
-    print(f"  Intermediate values: {trial.intermediate_values}")
-
-def objective(trial: optuna.trial.Trial, force_field) -> float:
+def objective(trial: optuna.trial.Trial) -> float:
     # 1. Suggest hyperparameters
     sigma = trial.suggest_float('sigma', 0.01, 360, log=True)
     theta = trial.suggest_float('theta', 0.1, 0.5)
@@ -34,7 +27,7 @@ def objective(trial: optuna.trial.Trial, force_field) -> float:
         population_size=population_size,
         children_size=children_size,
         plus_selection=plus_selection,
-        force_field=force_field,
+        force_field='charmm',
         sigma=sigma,
         theta=theta,
         alpha=alpha,
@@ -51,16 +44,13 @@ def objective(trial: optuna.trial.Trial, force_field) -> float:
     return -fitness  # maximize (if lower fitness is better)
 
 
-
 if __name__ == "__main__":
     # 5. Create and run Optuna study
-    for ff in ['amber', 'charmm']:
-        print(f"Running with force field: {ff}")
-        objective_with_ff = partial(objective, force_field=ff)
-        study = optuna.create_study(direction="maximize")  # because we minimize fitness, we maximize (-fitness)
-        study.optimize(objective_with_ff, n_trials=1000, n_jobs=10)
+    print(f"Running adaptive with charmm:")
+    study = optuna.create_study(direction="maximize")  # because we minimize fitness, we maximize (-fitness)
+    study.optimize(objective, n_trials=1000, n_jobs=-1)
 
-        # 6. Best hyperparameters
-        print("Best trial:")
-        print(study.best_trial.params)
-        print(study.best_trial.value)
+    # 6. Best hyperparameters
+    print("Best trial:")
+    print(study.best_trial.params)
+    print(study.best_trial.value)
