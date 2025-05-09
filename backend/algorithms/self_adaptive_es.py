@@ -2,7 +2,6 @@ import math
 import numpy as np
 
 from typing import List, Tuple
-from multiprocessing import get_context
 from overrides import overrides
 
 from backend.algorithms.es import ES
@@ -60,19 +59,18 @@ class SelfAdaptiveES(ES):
 
         self._initialize_sigma(sequence)
 
-        with get_context("spawn").Pool() as pool:
-            while self._generation < self._params.generations:
-                self._generation += 1
-                children: List[Protein] = self._population if self._params.plus_selection else []
-                parents_to_mutate = [self._population[np.random.randint(self._params.population_size)] for _ in range(self._params.children_size)]
+        while self._generation < self._params.generations:
+            self._generation += 1
+            children: List[Protein] = self._population if self._params.plus_selection else []
+            parents_to_mutate = [self._population[np.random.randint(self._params.population_size)] for _ in range(self._params.children_size)]
 
-                results = pool.map(self._mutate_protein, parents_to_mutate)
-                children.extend(results)
+            for parent in parents_to_mutate:
+                children.append(self._mutate_protein(parent))
 
-                if self._finalize_generation(children, callback, None):
-                    if self._params.premature_strategy == 'terminate': return self._global_best_offspring
-                    if self._params.premature_strategy == 'restart':
-                        self._population = self._create_initial_population(sequence)
-                        self._initialize_sigma(sequence)
+            if self._finalize_generation(children, callback, None):
+                if self._params.premature_strategy == 'terminate': return self._global_best_offspring
+                if self._params.premature_strategy == 'restart':
+                    self._population = self._create_initial_population(sequence)
+                    self._initialize_sigma(sequence)
 
         return self._global_best_offspring

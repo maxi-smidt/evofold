@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 
 from io import StringIO
@@ -13,6 +15,10 @@ from backend.structure.types import AngleList
 
 
 class Protein:
+    TIME_STRUCTURE = []
+    TIME_CIF = []
+    TIME_FITNESS = []
+
     ANGLE_MIN = -180
     ANGLE_MAX = 180
     FORCE_FIELDS = {
@@ -40,9 +46,17 @@ class Protein:
         if angles is None and flat_angles is None:
             self._angles = self._get_random_angles(sequence)
 
+        start = time.process_time_ns()
         self._compute_structure()
+        end_structure = time.process_time_ns()
         self._compute_cif()
+        end_cif = time.process_time_ns()
         self._compute_fitness()
+        end_fitness = time.process_time_ns()
+
+        self.TIME_STRUCTURE.append(end_structure - start)
+        self.TIME_CIF.append(end_cif - end_structure)
+        self.TIME_FITNESS.append(end_fitness - end_cif)
 
     def _compute_structure(self):
         predecessor = None

@@ -2,7 +2,6 @@ import numpy as np
 
 from abc import ABC, abstractmethod
 from heapq import nsmallest
-from multiprocessing import get_context
 from typing import Callable, List
 
 from backend.algorithms.params.es_params import ESParams
@@ -52,8 +51,7 @@ class ES(ABC):
         return Protein(sequence, self._params.force_field)
 
     def _create_initial_population(self, sequence) -> List[Protein]:
-        with get_context("spawn").Pool() as pool:
-            return pool.map(self._create_protein, [sequence for _ in  range(self._params.population_size)])
+        return [self._create_protein(sequence) for _ in range(self._params.population_size)]
 
     def _has_reached_stagnation(self) -> bool:
         return self._params.premature_stagnation is not None and self._reached_stagnation_inner()
