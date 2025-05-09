@@ -20,8 +20,6 @@ def objective(trial: optuna.trial.Trial) -> float:
     tau = trial.suggest_float('tau', 1, 14)
     alpha = trial.suggest_float('alpha', 0.01, 1)
 
-    print(f"[Trial {trial.number}] Testing: sigma={sigma:.3f}, pop={population_size}, plus={plus_selection}")
-
     # 2. Assemble AdaptiveESParams
     params = DerandomizedESParams(
         generations=150,  # fixed
@@ -38,8 +36,6 @@ def objective(trial: optuna.trial.Trial) -> float:
     # 3. Run the AdaptiveES
     sequence = "PEPTIDE"  # or any sequence you want to optimize on
     fitness = run_adaptive_es(sequence, params)
-
-    print(f"[Trial {trial.number}] Final fitness: {fitness:.4f}")
 
     # 4. Report the objective
     return -fitness  # maximize (if lower fitness is better)

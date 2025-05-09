@@ -19,8 +19,6 @@ def objective(trial: optuna.trial.Trial) -> float:
     mod_frequency = trial.suggest_int('mod_frequency', 1, 10)
     plus_selection = trial.suggest_categorical('plus_selection', [True, False])
 
-    print(f"[Trial {trial.number}] Testing: sigma={sigma:.3f}, pop={population_size}, plus={plus_selection}")
-
     # 2. Assemble AdaptiveESParams
     params = AdaptiveESParams(
         generations=150,  # fixed
@@ -37,8 +35,6 @@ def objective(trial: optuna.trial.Trial) -> float:
     # 3. Run the AdaptiveES
     sequence = "PEPTIDE"  # or any sequence you want to optimize on
     fitness = run_adaptive_es(sequence, params)
-
-    print(f"[Trial {trial.number}] Final fitness: {fitness:.4f}")
 
     # 4. Report the objective
     return -fitness  # maximize (if lower fitness is better)
