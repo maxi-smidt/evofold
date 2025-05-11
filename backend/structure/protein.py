@@ -46,13 +46,13 @@ class Protein:
         if angles is None and flat_angles is None:
             self._angles = self._get_random_angles(sequence)
 
-        start = time.process_time_ns()
+        start = time.perf_counter_ns()
         self._compute_structure()
-        end_structure = time.process_time_ns()
+        end_structure = time.perf_counter_ns()
         self._compute_cif()
-        end_cif = time.process_time_ns()
+        end_cif = time.perf_counter_ns()
         self._compute_fitness()
-        end_fitness = time.process_time_ns()
+        end_fitness = time.perf_counter_ns()
 
         self.TIME_STRUCTURE.append(end_structure - start)
         self.TIME_CIF.append(end_cif - end_structure)
