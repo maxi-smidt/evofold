@@ -40,7 +40,7 @@ def main():
             p_ada = adaptive.run(sequence)
             p_self_ada = self_adaptive.run(sequence)
             p_derand = derandomized.run(sequence)
-            print(f'{p_ada.fitness},{p_self_ada},{p_derand}')
+            print(f'{p_ada.fitness},{p_self_ada.fitness},{p_derand.fitness}')
 
         print(f'----')
 
