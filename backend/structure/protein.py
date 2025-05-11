@@ -41,7 +41,6 @@ class Protein:
             self._angles = self._get_random_angles(sequence)
 
         self._compute_structure()
-        self._compute_atom_positions()
         self._compute_cif()
         self._compute_fitness()
 
@@ -97,6 +96,7 @@ class Protein:
             )
 
     def _compute_cif(self) -> None:
+        self._compute_atom_positions()
         self._cif_str = self._cif_header_to_str()
         self._cif_str += self._cif_seperator_to_str()
         self._cif_str += self._cif_positions_to_str()
