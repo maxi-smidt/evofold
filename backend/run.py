@@ -13,8 +13,6 @@ t = time.time()
 
 def log(msg: str):
     print(msg)
-    with open("log.txt", "a") as f:
-        f.write(f"{msg}\n")
 
 def generate_sequence(n: int):
     return ''.join([np.random.choice(AAs) for _ in range(n)])
@@ -42,17 +40,10 @@ def run_measurement(sequence: str):
     measure_es('charmm', SelfAdaptiveESParams(force_field='charmm'), sequence)
 
 def main():
-    for n in [10, 30, 75, 100, 150, 200, 300]:
+    for n in [10, 50, 100, 200, 500, 1000, 1500]:
         s = generate_sequence(n)
         run_measurement(s)
 
 
 if __name__ == '__main__':
     main()
-
-# GQEFDRTGKM
-# YDDEFMHPHPEIMVFAFLNDDDRIGVLQRD
-# PVTPRSKLVIWRFAKDLWFTMSVCNYVYGDTHASEDYFAKHYSCKVYTMWPGILY
-#
-# WAEGLISITGPKTMSPVNNVHMPFFVYRYQCCVTQANFYMWFTCAHTDRWDYVPLREYAESCTPHCNASDLPAFQVIGSDSTWTFLAPQSECMAWFQMWS
-#
