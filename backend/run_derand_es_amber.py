@@ -30,6 +30,9 @@ def objective(trial: optuna.trial.Trial) -> float:
         alpha=alpha,
         crossover=crossover,
         tau=tau,
+        premature_strategy='terminate',
+        premature_stagnation=30,
+        premature_sigma=0
     )
 
     # 3. Run the AdaptiveES

@@ -29,7 +29,10 @@ def objective(trial: optuna.trial.Trial) -> float:
         sigma=sigma,
         theta=theta,
         alpha=alpha,
-        mod_frequency=mod_frequency
+        mod_frequency=mod_frequency,
+        premature_strategy='terminate',
+        premature_stagnation=30,
+        premature_sigma=0
     )
 
     # 3. Run the AdaptiveES

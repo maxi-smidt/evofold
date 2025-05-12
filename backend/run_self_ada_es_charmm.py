@@ -25,7 +25,10 @@ def objective(trial: optuna.trial.Trial) -> float:
         plus_selection=plus_selection,
         force_field='charmm',
         sigma=sigma,
-        strategy_param=strategy_param
+        strategy_param=strategy_param,
+        premature_strategy='terminate',
+        premature_stagnation=30,
+        premature_sigma=0
     )
 
     # 3. Run the AdaptiveES
