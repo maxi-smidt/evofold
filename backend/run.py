@@ -12,9 +12,9 @@ from backend.algorithms.self_adaptive_es import SelfAdaptiveES
 
 
 def get_es(force_field: Literal['charmm', 'amber'], plus_selection: bool, sequence: str) -> Tuple[ES, ES, ES]:
-    adaptive_params = AdaptiveESParams(force_field=force_field, plus_selection=plus_selection)
-    self_adaptive_params = SelfAdaptiveESParams(force_field=force_field, plus_selection=plus_selection)
-    derandomized_params = DerandomizedESParams(force_field=force_field, plus_selection=plus_selection)
+    adaptive_params = AdaptiveESParams(generations=150, force_field=force_field, plus_selection=plus_selection)
+    self_adaptive_params = SelfAdaptiveESParams(generations=150, force_field=force_field, plus_selection=plus_selection)
+    derandomized_params = DerandomizedESParams(generations=150, force_field=force_field, plus_selection=plus_selection)
     derandomized_params.tau = math.sqrt(len(sequence) * 2)
     derandomized_params.alpha = 1 / math.sqrt(len(sequence) * 2)
     return AdaptiveES(adaptive_params), SelfAdaptiveES(self_adaptive_params), DerandomizedES(derandomized_params)
