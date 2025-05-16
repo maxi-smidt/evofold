@@ -40,7 +40,7 @@ def run_measurement(sequence: str):
     measure_es('charmm', SelfAdaptiveESParams(force_field='charmm'), sequence)
 
 def main():
-    for n in [10, 50, 100, 200, 500, 1000, 1500]:
+    for n in [10, 30, 75, 100, 150]:
         s = generate_sequence(n)
         run_measurement(s)
 
