@@ -1,4 +1,6 @@
 import math
+import time
+
 import numpy as np
 
 from typing import List, Tuple
@@ -13,6 +15,7 @@ from backend.structure.protein import Protein
 class SelfAdaptiveES(ES):
     def __init__(self, params: SelfAdaptiveESParams):
         super().__init__(params)
+        self.TIMES = []
 
     def _mutate_protein(self, protein: Protein) -> Protein:
         angles, sigma = self._self_adaptive_gaussian_mutation(protein)
@@ -57,11 +60,11 @@ class SelfAdaptiveES(ES):
     @overrides
     def run(self, sequence: str, callback: ES.Callback=None, callback_frequency: int=1) -> Protein:
         self._initialize_run(sequence, callback_frequency)
-
         self._initialize_sigma(sequence)
 
         with get_context("spawn").Pool() as pool:
             while self._generation < self._params.generations:
+                start = time.perf_counter_ns()
                 self._generation += 1
                 children: List[Protein] = self._population if self._params.plus_selection else []
                 parents_to_mutate = [self._population[np.random.randint(self._params.population_size)] for _ in range(self._params.children_size)]
@@ -70,9 +73,13 @@ class SelfAdaptiveES(ES):
                 children.extend(results)
 
                 if self._finalize_generation(children, callback, None):
-                    if self._params.premature_strategy == 'terminate': return self._global_best_offspring
+                    if self._params.premature_strategy == 'terminate':
+                        self.TIMES.append(time.perf_counter_ns() - start)
+                        return self._global_best_offspring
                     if self._params.premature_strategy == 'restart':
                         self._population = self._create_initial_population(sequence)
                         self._initialize_sigma(sequence)
+                        self.TIMES.append(time.perf_counter_ns() - start)
+                self.TIMES.append(time.perf_counter_ns() - start)
 
         return self._global_best_offspring
