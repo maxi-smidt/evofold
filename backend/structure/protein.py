@@ -43,6 +43,7 @@ class Protein:
         self._compute_structure()
         self._compute_cif()
         self._compute_fitness()
+        self._cif_str = ''
 
     def _compute_structure(self):
         predecessor = None
