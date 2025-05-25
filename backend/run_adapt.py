@@ -11,13 +11,13 @@ def get_es(force_field: Literal['charmm', 'amber']) -> AdaptiveES:
 def get_params(ff: str):
     return AdaptiveESParams(
         force_field=ff,
-        plus_selection= {'amber': True,      'charmm': ...}[ff],
-        population_size={'amber': 170,       'charmm': ...}[ff],
-        children_size=  {'amber': 848,       'charmm': ...}[ff],
-        sigma=          {'amber': 53.698234, 'charmm': ...}[ff],
-        theta=          {'amber': 0.239167,  'charmm': ...}[ff],
-        alpha=          {'amber': 1.381874,  'charmm': ...}[ff],
-        mod_frequency=  {'amber': 4,         'charmm': ...}[ff],
+        plus_selection= {'amber': True,      'charmm': True}[ff],
+        population_size={'amber': 170,       'charmm': 129}[ff],
+        children_size=  {'amber': 848,       'charmm': 955}[ff],
+        sigma=          {'amber': 53.698234, 'charmm': 36.882018}[ff],
+        theta=          {'amber': 0.239167,  'charmm': 0.391328}[ff],
+        alpha=          {'amber': 1.381874,  'charmm': 1.286563}[ff],
+        mod_frequency=  {'amber': 4,         'charmm': 7}[ff],
     )
 
 
