@@ -20,7 +20,7 @@
     "@primeng/themes": "^19.1.0",
     "angular-plotly.js": "^6.0.0",
     "lz-string": "^1.5.0",
-    "molstar": "^4.13.0",
+    "molstar": "^4.17.0",
     "ngx-structure-viewer": "^0.0.23",
     "plotly.js-dist-min": "^3.0.1",
     "primeflex": "4.0.0",
