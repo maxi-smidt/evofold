@@ -16,7 +16,7 @@
     "@angular/forms": "19.2.10",
     "@angular/platform-browser": "19.2.10",
     "@angular/platform-browser-dynamic": "^19.2.10",
-    "@angular/router": "19.2.9",
+    "@angular/router": "20.0.0",
     "@primeng/themes": "^19.1.0",
     "angular-plotly.js": "^6.0.0",
     "lz-string": "^1.5.0",
