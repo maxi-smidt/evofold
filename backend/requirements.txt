@@ -15,7 +15,7 @@ OpenMM==8.2.0
 optuna==4.3.0
 overrides==7.7.0
 packaging==25.0
-pydantic==2.11.4
+pydantic==2.11.7
 pydantic_core==2.33.2
 python-dotenv==1.1.0
 PyYAML==6.0.2
